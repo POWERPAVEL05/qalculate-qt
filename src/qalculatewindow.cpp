@@ -369,6 +369,9 @@ class QalculateTableWidget : public QTableWidget {
 
 };
 
+/*==HTW==
+* adds section with separators at top and bottom with section name at top
+*/
 #define ADD_SECTION(str) \
 	if(!menu->style()->styleHint(QStyle::SH_Menu_SupportsSections)) { \
 		aw = new QWidgetAction(this); \
@@ -422,6 +425,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	QVBoxLayout *topLayout = new QVBoxLayout(w_top);
 	topLayout->setContentsMargins(0, 0, 0, 0);
 
+	/* ==HTW==
+	* bar at top containing buttons like keypad tools etc
+	*/
 	tb = addToolBar("Toolbar");
 	tb->setContextMenuPolicy(Qt::CustomContextMenu);
 	tb->setObjectName("Toolbar");
@@ -462,6 +468,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	QFont appfont;
 	if(settings->use_custom_app_font) appfont.fromString(QString::fromStdString(settings->custom_app_font));
 
+	/*==HTW==
+	 *Menu button at top right of application
+	 */
 	menuAction_t = new QToolButton(this); menuAction_t->setIcon(LOAD_COLORED_ICON("menu")); menuAction_t->setText(tr("Menu"));
 	menuAction_t->setPopupMode(QToolButton::InstantPopup);
 	menu = new QMenu(tr("Menu"), this);
@@ -518,11 +527,31 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	menu->addSeparator();
 	quitAction = menu->addAction(tr("Quit"), qApp, SLOT(closeAllWindows()));
 
+
+	/* ==HTW==
+	* TEST TO ADD BUTTON
+	*/
+	modeAction_t = new QToolButton(this);
+	modeAction_t->setText(tr("TEST"));
+	modeAction_t->setPopupMode(QToolButton::InstantPopup);
+	menu = new QMenu("TEST", this);
+	quitAction = menu->addAction(tr("Quit"), qApp, SLOT(closeAllWindows()));
+	modeAction_t->setMenu(menu);
+	menu->setToolTipsVisible(true);
+	menu->setToolTip("this is a tooltip");
+	tb->addWidget(modeAction_t);
+
+	/*==HTW==
+	* start of Mode button; first button from left
+	*/
 	modeAction_t = new QToolButton(this); modeAction_t->setIcon(LOAD_COLORED_ICON("configure")); modeAction_t->setText(tr("Mode"));
 	modeAction_t->setPopupMode(QToolButton::InstantPopup);
 	menu = new QMenu(tr("Mode"), this);
 	modeAction_t->setMenu(menu);
 
+	/* ==HTW==
+	* adds subsections and actions to mode menu
+	*/
 	ADD_SECTION(tr("General Display Mode"));
 	QFontMetrics fm1(settings->use_custom_app_font ? appfont : menu->font());
 	menu->setToolTipsVisible(true);
@@ -668,7 +697,7 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	action = menu->addAction(tr("Hexadecimal"), this, SLOT(inputBaseActivated())); action->setCheckable(true); group->addAction(action);
 	action->setData(BASE_HEXADECIMAL); if(settings->evalops.parse_options.base == BASE_HEXADECIMAL) {base_checked = true; action->setChecked(true);}
 	menu2 = menu;
-	menu = menu2->addMenu(tr("Other"));
+	menu = menu2->addMenu(tr("Other"));//HTW adds submenu at other panel
 	action = menu->addAction(tr("Duodecimal"), this, SLOT(inputBaseActivated())); action->setCheckable(true); group->addAction(action);
 	action->setData(BASE_DUODECIMAL); if(settings->evalops.parse_options.base == BASE_DUODECIMAL) {base_checked = true; action->setChecked(true);}
 	action = menu->addAction(tr("Roman numerals"), this, SLOT(inputBaseActivated())); action->setCheckable(true); group->addAction(action);
@@ -705,6 +734,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	menu = menu2;
 	menu->addSeparator();
 
+	/*==HTW==
+	* adds three spinboxes to awg with parent aww
+	*/
 	aw = new QWidgetAction(this);
 	aww = new QWidget(this);
 	aw->setDefaultWidget(aww);
@@ -736,13 +768,26 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	menu->setMinimumWidth(w);
 	tb->addWidget(modeAction_t);
 	modeAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
+	/*==HTW==
+	* end of mode button
+	*/
 
+	/*==HTW==
+	* start of conversion button
+	*/
 	toAction_t = new QalculateToolButton(this); toAction_t->setIcon(LOAD_COLORED_ICON("convert")); toAction_t->setText(tr("Convert"));
 	toAction_t->setEnabled(settings->useColoredIcon(this));
 	connect(toAction_t, SIGNAL(clicked()), this, SLOT(onToActivated()));
 	connect(toAction_t, SIGNAL(middleButtonClicked()), this, SLOT(onToActivatedAlt()));
 	toMenu = new QMenu(this);
 	tb->addWidget(toAction_t);
+	/*==HTW==
+	* end of conversion button
+	*/
+
+	/*==HTW==
+	* start of save button
+	*/
 	toAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
 	storeAction_t = new QalculateToolButton(this); storeAction_t->setIcon(LOAD_COLORED_ICON("document-save")); storeAction_t->setText(tr("Store"));
 	storeAction_t->setPopupMode(QToolButton::MenuButtonPopup);
@@ -751,6 +796,10 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	storeAction_t->setMenu(variablesMenu);
 	tb->addWidget(storeAction_t);
 	storeAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
+	/*==HTW==
+	* end of save button
+	*/
+
 	functionsAction_t = new QalculateToolButton(this); functionsAction_t->setIcon(LOAD_COLORED_ICON("function")); functionsAction_t->setText(tr("Functions"));
 	functionsAction_t->setPopupMode(QToolButton::MenuButtonPopup);
 	connect(functionsAction_t, SIGNAL(clicked()), this, SLOT(openFunctions()));
@@ -758,6 +807,7 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	functionsAction_t->setMenu(functionsMenu);
 	tb->addWidget(functionsAction_t);
 	functionsAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
+
 	unitsAction_t = new QalculateToolButton(this); unitsAction_t->setIcon(LOAD_COLORED_ICON("units")); unitsAction_t->setText(tr("Units"));
 	unitsAction_t->setPopupMode(QToolButton::MenuButtonPopup);
 	connect(unitsAction_t, SIGNAL(clicked()), this, SLOT(openUnits()));
@@ -765,6 +815,7 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	unitsAction_t->setMenu(unitsMenu);
 	tb->addWidget(unitsAction_t);
 	unitsAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
+
 	if(CALCULATOR->canPlot()) {
 		plotAction_t = new QAction(LOAD_COLORED_ICON("plot"), tr("Plot"), this);
 		connect(plotAction_t, SIGNAL(triggered(bool)), this, SLOT(openPlot()));
@@ -772,6 +823,10 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	} else {
 		plotAction_t = NULL;
 	}
+
+	/*==HTW==
+	* begin keypad button
+	*/
 	basesAction = new QAction(LOAD_COLORED_ICON("number-bases"), tr("Number bases"), this);
 	connect(basesAction, SIGNAL(triggered(bool)), this, SLOT(onBasesActivated(bool)));
 	basesAction->setCheckable(true);
@@ -805,7 +860,13 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	tb->addWidget(spacer);
 	tb->addWidget(menuAction_t);
 	menuAction_t->setToolButtonStyle((Qt::ToolButtonStyle) settings->toolbar_style);
+	/*==HTW==
+	* end keypad
+	*/
 
+	/*==HTW==
+	* assumption: the following widgets are for input display and history of expressions
+	*/
 	expressionEdit = new ExpressionEdit(this, tb, statusLabelLeft);
 	font = expressionEdit->font();
 	if(font.pixelSize() >= 0) {
@@ -832,6 +893,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	ehSplitter->setCollapsible(0, false);
 	ehSplitter->setCollapsible(1, false);
 
+	/*==HTW==
+	* assumption: display versions for different bases
+	*/
 	basesDock = new QalculateDockWidget(tr("Number bases"), this, expressionEdit);
 	basesDock->setObjectName("number-bases-dock");
 	QWidget *basesWidget = new QWidget(this);
@@ -904,6 +968,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	connect(hexEdit, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showBasesContextMenu(const QPoint&)));
 	connect(binEdit, SIGNAL(linkActivated(const QString&)), this, SLOT(resultBasesLinkActivated(const QString&)));
 
+	/*==HTW==
+	* start of keypadwidget
+	*/
 	keypad = new KeypadWidget(this);
 	keypadDock = new QalculateDockWidget(this, expressionEdit);
 	keypadDock->setObjectName("keypad-dock");
@@ -995,6 +1062,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 
 	updateStatusText();
 
+	/*==HTW==
+	* mostly signal assign to buttons
+	*/
 	connect(functionsMenu, SIGNAL(aboutToShow()), this, SLOT(initializeFunctionsMenu()));
 	connect(variablesMenu, SIGNAL(aboutToShow()), this, SLOT(initializeVariablesMenu()));
 	connect(unitsMenu, SIGNAL(aboutToShow()), this, SLOT(initializeUnitsMenu()));
@@ -1055,6 +1125,9 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	connect(QGuiApplication::styleHints(), SIGNAL(colorSchemeChanged(Qt::ColorScheme)), this, SLOT(onColorSchemeChanged()));
 #endif
 
+	/* ==HTW==
+	* setup stuff
+	*/
 	if(settings->enable_tooltips != 1) onEnableTooltipsChanged();
 
 	if(!settings->window_geometry.isEmpty()) restoreGeometry(settings->window_geometry);
@@ -1084,6 +1157,7 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	}
 
 }
+
 QalculateWindow::~QalculateWindow() {}
 
 void QalculateWindow::startTest() {
