@@ -56,3 +56,12 @@ compile_commands.json
 
 # VSCode Environment
 .vscode/*
+html/*
+latex/*
+
+# clangd
+.qtc_clangd/*
+.qtc_clangd
+
+#Doxygen
+Doxyfile

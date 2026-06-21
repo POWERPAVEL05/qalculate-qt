@@ -455,6 +455,10 @@ int HistoryView::maxTemporaryCharacters() {
 	return (width() * 1.65 / fm.averageCharWidth()) - 7;
 }
 
+/*
+	@param values
+
+*/
 void HistoryView::addResult(std::vector<std::string> values, std::string expression, bool pexact, std::string parse, int exact, bool dual_approx, const QString &image, bool *implicit_warning, int initial_load, size_t index, bool temporary, const std::string &tmp_value) {
 	if(temporary && !previous_temporary) {
 		previous_cursor2 = previous_cursor;

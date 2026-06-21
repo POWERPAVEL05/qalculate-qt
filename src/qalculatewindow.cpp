@@ -8,6 +8,7 @@
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 */
+#include "htw/tutil.h"
 
 #include <QLocalSocket>
 #include <QLocalServer>
@@ -1046,6 +1047,10 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 
 	b_busy = 0;
 
+	// htw::init_log();
+	// *htw::log << "Successful init\n";
+	
+	/*sets keyboard focus to Texteditbox*/
 	expressionEdit->setFocus();
 
 	if(settings->custom_result_font.empty()) settings->custom_result_font = historyView->font().toString().toStdString();
@@ -1071,8 +1076,8 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	connect(historyView, SIGNAL(insertTextRequested(std::string)), this, SLOT(onInsertTextRequested(std::string)));
 	connect(historyView, SIGNAL(insertValueRequested(int)), this, SLOT(onInsertValueRequested(int)));
 	connect(historyView, SIGNAL(historyReloaded()), this, SLOT(onHistoryReloaded()));
-	connect(expressionEdit, SIGNAL(returnPressed()), this, SLOT(calculate()));
-	connect(expressionEdit, SIGNAL(calculateSelectionRequest()), this, SLOT(calculateSelection()));
+	connect(expressionEdit, SIGNAL(returnPressed()), this, SLOT(calculate()));//==HTW==calc
+	connect(expressionEdit, SIGNAL(calculateSelectionRequest()), this, SLOT(calculateSelection()));//==HTW==calc
 	connect(expressionEdit, SIGNAL(expressionChanged()), this, SLOT(onExpressionChanged()));
 	connect(expressionEdit, SIGNAL(statusChanged(QString, bool, bool, bool, bool)), this, SLOT(onStatusChanged(QString, bool, bool, bool, bool)));
 	connect(expressionEdit, SIGNAL(toConversionRequested(std::string)), this, SLOT(onToConversionRequested(std::string)));
@@ -3985,6 +3990,7 @@ void set_assumption(const std::string &str, AssumptionType &at, AssumptionSign &
 #define SET_BOOL_PT(x)		{int v = s2b(svalue); if(v < 0) {CALCULATOR->error(true, "Illegal value: %s.", svalue.c_str(), NULL);} else if(x != v) {x = v; expressionFormatUpdated(true);}}
 #define SET_BOOL_PF(x)		{int v = s2b(svalue); if(v < 0) {CALCULATOR->error(true, "Illegal value: %s.", svalue.c_str(), NULL);} else if(x != v) {x = v; expressionFormatUpdated(false);}}
 
+//==HTW==calc
 void QalculateWindow::setOption(std::string str) {
 	remove_blank_ends(str);
 	gsub(SIGN_MINUS, "-", str);
@@ -4980,7 +4986,7 @@ void QalculateWindow::calculateSelection() {
 	calculateExpression(true, false, OPERATION_ADD, NULL, false, 0, "", "", true, true);
 }
 
-void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, MathOperation op, MathFunction *f, bool do_stack, size_t stack_index, std::string execute_str, std::string str, bool check_exrates, bool calculate_selection) {
+void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, MathOperation op, MathFunction *f, bool do_stack, size_t stack_index, std::string execute_str,std::string str, bool check_exrates, bool calculate_selection) {
 
 	workspace_changed = true;
 
@@ -5607,7 +5613,7 @@ void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, Mat
 			displayMessages();
 			return;
 		}
-	}
+	}//end 0
 
 	if(execute_str.empty() && !calculate_selection) {
 		if(str == "MC") {
@@ -6187,6 +6193,7 @@ void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, Mat
 	} else {
 		original_expression = CALCULATOR->unlocalizeExpression(execute_str.empty() ? str : execute_str, settings->evalops.parse_options);
 		transform_expression_for_equals_save(original_expression, settings->evalops.parse_options);
+		//==HTW==calc
 		CALCULATOR->calculate(mstruct, original_expression, 0, settings->evalops, parsed_mstruct, parsed_tostruct);
 	}
 
@@ -6851,6 +6858,10 @@ bool contains_plot_or_save(const std::string &str) {
 	return false;
 }
 
+/*==HTW==calc
+something is calculated here!!!! 
+is a SLOT
+*/
 void QalculateWindow::onExpressionChanged() {
 	toAction_t->setEnabled(expressionEdit->expressionHasChanged() || !settings->history_answer.empty() || settings->useColoredIcon(this));
 	if(!basesDock->isVisible()) return;
@@ -7773,7 +7784,8 @@ void ViewThread::run() {
 			MathStructure mp(*mparse);
 			mp.format(po);
 			if(compact) po.preserve_format = false;
-			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
+			// parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
+			parsed_text = "Hallo";
 			if(po.base == BASE_CUSTOM) {
 				CALCULATOR->setCustomOutputBase(nr_base);
 			}
@@ -8161,6 +8173,7 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 				}
 			}
 		}
+		/*b_add determines if result is actually added*/
 		if(b_add) {
 			auto_expression = "";
 			auto_result = "";
@@ -8170,7 +8183,11 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			auto_error = false;
 			auto_aborted = false;
 			if(autoCalculateTimer) autoCalculateTimer->stop();
+			/*original function:*/
 			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+			// adds only the result expr to historyView; second is sort of error
+			// historyView->addResult(htw::result_v, htw::entry_v[1], !parsed_approx, update_parse ? parsed_text : "", b_exact, htw::result_v.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+			// historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? "Lalbert" : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 		} else if(update_parse) {
 			settings->history_answer.pop_back();
 			if(!mstruct_exact.isUndefined()) settings->history_answer.pop_back();

@@ -1,0 +1,27 @@
+#0  QalculateWindow::calculateExpression (this=0x555555a8acd0, force=true, do_mathoperation=false, op=OPERATION_ADD, f=0x0, do_stack=false, stack_index=0, execute_str="", str="1+1+1", check_exrates=true, calculate_selection=false) at src/qalculatewindow.cpp:6194
+$3 = false
+#0  QalculateWindow::calculateExpression (this=0x555555a8acd0, force=true, do_mathoperation=false, op=OPERATION_ADD, f=0x0, do_stack=false, stack_index=0, execute_str="", str="1+1+1", check_exrates=true, calculate_selection=false) at src/qalculatewindow.cpp:6197
+#1  0x000055555571f7da in QalculateWindow::calculate (this=0x555555a8acd0) at src/qalculatewindow.cpp:3851
+#2  0x00005555557b863e in QalculateWindow::qt_static_metacall (_o=0x555555a8acd0, _c=QMetaObject::InvokeMetaMethod, _id=171, _a=0x7fffffffcb20) at build/moc_qalculatewindow.cpp:1012
+#3  0x00007ffff6b18ed2 in ?? () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#4  0x00005555557b0715 in ExpressionEdit::returnPressed (this=0x55555610bd10) at build/moc_expressionedit.cpp:471
+#5  0x00005555555db8b1 in ExpressionEdit::keyPressEvent (this=0x55555610bd10, event=0x7fffffffd510) at src/expressionedit.cpp:1978
+#6  0x00007ffff79a6da2 in QWidget::event(QEvent*) () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#7  0x00007ffff7a55a92 in QFrame::event(QEvent*) () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#8  0x00007ffff7963052 in QApplicationPrivate::notify_helper(QObject*, QEvent*) () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#9  0x00007ffff796ab4f in QApplication::notify(QObject*, QEvent*) () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#10 0x00007ffff6ade458 in QCoreApplication::notifyInternal2(QObject*, QEvent*) () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#11 0x00007ffff79c357a in ?? () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#12 0x00007ffff7963052 in QApplicationPrivate::notify_helper(QObject*, QEvent*) () from /lib/x86_64-linux-gnu/libQt5Widgets.so.5
+#13 0x00007ffff6ade458 in QCoreApplication::notifyInternal2(QObject*, QEvent*) () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#14 0x00007ffff7140b4d in QGuiApplicationPrivate::processKeyEvent(QWindowSystemInterfacePrivate::KeyEvent*) () from /lib/x86_64-linux-gnu/libQt5Gui.so.5
+#15 0x00007ffff711679c in QWindowSystemInterface::sendWindowSystemEvents(QFlags<QEventLoop::ProcessEventsFlag>) () from /lib/x86_64-linux-gnu/libQt5Gui.so.5
+#16 0x00007ffff16f492e in ?? () from /lib/x86_64-linux-gnu/libQt5XcbQpa.so.5
+#17 0x00007ffff51033c5 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#18 0x00007ffff51055f7 in ?? () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#19 0x00007ffff5105d60 in g_main_context_iteration () from /lib/x86_64-linux-gnu/libglib-2.0.so.0
+#20 0x00007ffff6b3b4ad in QEventDispatcherGlib::processEvents(QFlags<QEventLoop::ProcessEventsFlag>) () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#21 0x00007ffff6adcdc2 in QEventLoop::exec(QFlags<QEventLoop::ProcessEventsFlag>) () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#22 0x00007ffff6ae57e2 in QCoreApplication::exec() () from /lib/x86_64-linux-gnu/libQt5Core.so.5
+#23 0x000055555569cf79 in main (argc=1, argv=0x7fffffffe158) at src/main.cpp:321
+$4 = 6197

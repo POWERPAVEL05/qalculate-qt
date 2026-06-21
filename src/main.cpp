@@ -224,6 +224,7 @@ int main(int argc, char **argv) {
 	app.setWindowIcon(LOAD_APP_ICON("qalculate-qt"));
 #endif
 
+	//HTW hier API zu libqalculate
 	new Calculator(settings->ignore_locale);
 
 	if(parser->isSet(uOption)) {
@@ -306,16 +307,20 @@ int main(int argc, char **argv) {
 		expression += args.at(i);
 	}
 	expression = expression.trimmed();
-	if(!expression.isEmpty()) win->calculate(expression);
+
+	if(!expression.isEmpty()) 
+		win->calculate(expression);
+
 	args.clear();
 
 	settings->checkVersion(false, win);
 
-	if(!settings->use_custom_app_font) win->loadInitialHistory();
+	if(!settings->use_custom_app_font) 
+		win->loadInitialHistory();
 
 	return app.exec();
-
 }
+
 
 QalculateTranslator::QalculateTranslator() : QTranslator() {}
 QString	QalculateTranslator::translate(const char *context, const char *sourceText, const char *disambiguation, int n) const {
