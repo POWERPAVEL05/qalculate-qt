@@ -1,62 +1,44 @@
 #include "htw_tex.h"
 
-#include <algorithm>
 #include <sstream>
+#include <fstream>
 #include <vector>
 
 using std::stringstream;
+using std::ofstream;
 
-string texEnv::begin()
+void texDoc::addInlineMath(const string &m)
 {
-    stringstream sst;
-    sst << R"(\begin{)" << m_name << "}";
-    return sst.str();
+    m_data << "$\n"  <<  m  << "\n$";
 }
 
-string texEnv::end()
+void texDoc::addAlignedMath(const vector<string> &m)
 {
-    stringstream sst;
-    sst << R"(\end{)" << m_name << "}";
-    return sst.str();
+    if(m.empty())
+    {
+        return;
+    }
+
+    m_data << "$\\begin{aligned}\n";
+
+    for(auto line : m)
+    {
+        m_data << line << "\n";
+    }
+
+    m_data <<  "\n\\end{aligned}$";
 }
 
-void texEnv::clear()
+void texDoc::addSimpleText(const string &s)
 {
-    m_content.str(std::string());
-}
-
-string texEnv::generate()
-{
-    return m_content.str();
-}
-
-void texEnv::addContent(const string &s)
-{
-    m_content << s;
-}
-
-string mathInlineEnv::generate()
-{
-    stringstream sst;
-    sst << "$\n"  << m_content.str()  << "\n$";
-    return sst.str();
-}
-
-void mathAlignedEnv::addContent(const string &s)
-{
-    m_content << s << '\n';
-}
-
-//this sorta has to change
-string mathAlignedEnv::generate()
-{
-    stringstream sst;
-    sst << "$" << begin() <<  m_content.str() << end() << "$";
-    return sst.str();
+    m_data << s << "\n";
 }
 
 void texDoc::addPackages(const vector<string> &packages)
 {
+    if(packages.empty())
+        return;
+
     stringstream sst;
     for(auto package : packages)
     {
@@ -75,13 +57,9 @@ void texDoc::addInPreamble(const vector<string> &lines)
     }
 }
 
-int texDoc::addEnv(shared_ptr<texEnv> &env)
+string texDoc::getContent()
 {
-    if(env == nullptr)
-        return 1;
-
-    m_envs.push_back(env);
-    return 0;
+    return m_content.str();
 }
 
 void texDoc::generateContent()
@@ -97,17 +75,26 @@ void texDoc::generateContent()
 
     m_content << "\\begin{document}" << '\n';
 
-    for(auto env : m_envs)
-    {
-        m_content << env->generate() << '\n';
-    }
+    m_content << m_data.str();
 
     m_content << "\\end{document}" << '\n';
 
+    m_isGenerated = true;
 }
 
-//todo
 int texDoc::saveToFile(const string &fname)
 {
-   return 0;
+    if(!m_isGenerated)
+        generateContent();
+
+    ofstream file(fname);
+
+    if(!file.is_open())
+        return 1;
+
+    file << m_content.str();
+
+    file.close();
+
+    return 0;
 }

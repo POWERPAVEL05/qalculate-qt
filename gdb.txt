@@ -24,3 +24,6 @@
 #23 0x00007ffff6ae57e2 in QCoreApplication::exec() () from /lib/x86_64-linux-gnu/libQt5Core.so.5
 #24 0x000055555569cf79 in main (argc=1, argv=0x7fffffffe158) at src/main.cpp:321
 Quit
+
+
+8096; write to thread

@@ -39,7 +39,43 @@
 #include "expressionedit.h"
 #include "historyview.h"
 #include "qalculateqtsettings.h"
+#include "qglobal.h"
+#include "qtextcursor.h"
 
+
+//HTW
+
+void HistoryView::debug(const QPoint &pos){
+	QString sref = anchorAt(pos);
+
+	if(!sref.isEmpty())
+	{
+		QDebug(QtDebugMsg) << sref << "\n\n\n";
+	}
+		
+	QTextCursor cur = cursorForPosition(viewport()->mapFromParent(pos));
+
+	//filters out html!!
+	// QDebug(QtDebugMsg) << cur.selectedText() << "\nBlocks\n"; 
+	QDebug(QtDebugMsg) << cur.selection().toHtml() << "\nBlocks\n";
+
+	cur.movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
+	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
+
+	while(!cur.atEnd())
+	{
+		cur.movePosition(QTextCursor::EndOfBlock,QTextCursor::KeepAnchor);
+		QDebug(QtDebugMsg) << cur.selection().toHtml() << "\n\n\n";
+		cur.movePosition(QTextCursor::NextBlock,QTextCursor::MoveAnchor);
+	}
+
+}
+
+void HistoryView::debugAnalyze(){
+	debug(context_pos);	
+}
+
+//HTW END
 bool qstring_has_nondigit(const QString &str) {
 	for(int i = 0; i < str.length(); i++) {
 		if(!str[i].isDigit()) return true;
@@ -455,10 +491,7 @@ int HistoryView::maxTemporaryCharacters() {
 	return (width() * 1.65 / fm.averageCharWidth()) - 7;
 }
 
-/*
-	@param values
 
-*/
 void HistoryView::addResult(std::vector<std::string> values, std::string expression, bool pexact, std::string parse, int exact, bool dual_approx, const QString &image, bool *implicit_warning, int initial_load, size_t index, bool temporary, const std::string &tmp_value) {
 	if(temporary && !previous_temporary) {
 		previous_cursor2 = previous_cursor;
@@ -1209,14 +1242,14 @@ void HistoryView::indexAtPos(const QPoint &pos, int *expression_index, int *resu
 	*expression_index = -1;
 	*result_index = -1;
 	if(value_index) *value_index = -1;
-	QString sref = anchorAt(pos);
+	QString sref = anchorAt(pos);//section is already selected
 	if(sref.isEmpty()) {
 		QTextCursor cur = cursorForPosition(viewport()->mapFromParent(pos));
 		cur.movePosition(QTextCursor::StartOfBlock, QTextCursor::KeepAnchor);
 		QString str = cur.selection().toHtml();
 		int i = str.lastIndexOf("<a name=\"");
 		if(i >= 0) {
-			i += 9;
+			i += 9; //len of "<a name=\""
 			int i2 = str.indexOf("\"", i);
 			if(i2 >= 0) sref = str.mid(i, i2 - i);
 		}
@@ -1290,6 +1323,7 @@ void HistoryView::contextMenuEvent(QContextMenuEvent *e) {
 		cmenu->addSeparator();
 		delAction = cmenu->addAction(tr("Remove"), this, SLOT(editRemove()));
 		clearAction = cmenu->addAction(tr("Clear"), this, SLOT(editClear()));
+		debugAction = cmenu->addAction("debug", this, SLOT(debugAnalyze()));
 		if(fileMenu) {
 			fileSeparator = cmenu->addSeparator();
 			cmenu->addAction(modeMenu->menuAction());
@@ -1297,6 +1331,7 @@ void HistoryView::contextMenuEvent(QContextMenuEvent *e) {
 			cmenu->addAction(tbAction);
 		}
 	}
+	debugAction->setEnabled(true);
 	int i1 = -1, i2 = -1, i3 = -1;
 	QString astr;
 	context_pos = e->pos();
@@ -1701,9 +1736,9 @@ void HistoryView::editInsertText() {
 	int i1 = -1, i2 = -1;
 	QString astr;
 	indexAtPos(context_pos, &i1, &i2, NULL, &astr);
-	if(i1 < 0 && astr == "TR") {
+	if(i1 < 0 && astr == "TR") {//temp result
 		emit insertTextRequested(result_tmp);
-	} else if(i1 < 0 && astr == "TP") {
+	} else if(i1 < 0 && astr == "TP") {//temp parsed
 		emit insertTextRequested(parse_tmp);
 	} else if(i2 >= 0) {
 		if(i1 >= 0 && (size_t) i1 < settings->v_result.size() && (size_t) i2 < settings->v_result[i1].size()) {

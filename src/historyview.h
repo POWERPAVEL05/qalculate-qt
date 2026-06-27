@@ -36,6 +36,8 @@ class HistoryView : public QTextEdit {
 		QDialog *searchDialog;
 
 		void addResult(std::vector<std::string> values, std::string expression = "", bool pexact = true, std::string parse = "", int exact = 1, bool dual_approx = false, const QString &image = QString(), bool *implicit_warning = NULL, int initial_load = 0, size_t index = 0, bool temporary = false, const std::string &tmp_value = "");
+
+
 		void clearTemporary();
 		void addMessages();
 		void loadInitial(bool reload = false);
@@ -47,6 +49,8 @@ class HistoryView : public QTextEdit {
 		int maxTemporaryCharacters();
 		void setReversed(bool);
 
+		void debug(const QPoint &pos);
+
 	protected:
 
 		QString s_text, previous_html, previous_html2, temporary_error;
@@ -55,6 +59,7 @@ class HistoryView : public QTextEdit {
 		int has_lock_symbol;
 		QMenu *cmenu, *fileMenu, *modeMenu;
 		QAction *insertTextAction, *insertValueAction, *copyAction, *copyFormattedAction, *copyAsciiAction, *selectAllAction, *delAction, *clearAction, *protectAction, *movetotopAction, *tbAction, *fileSeparator, *findDateAction, *commentAction;
+		QAction * debugAction;
 		QColor text_color;
 		QRect prev_fonti;
 		QPoint context_pos;
@@ -94,6 +99,8 @@ class HistoryView : public QTextEdit {
 		void editMoveToTop();
 		void editComment();
 		void reloadHistory();
+
+		void debugAnalyze();//HTW
 
 	signals:
 

@@ -4,65 +4,37 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <memory>
 
 using std::vector;
 using std::string;
 using std::stringstream;
-using std::shared_ptr;
 
-class texEnv
-{
-    protected: 
-        string m_name;
-        stringstream m_content;
-
-    public:
-        texEnv(const string &name = ""): m_name(name) {};    
-
-        string begin();
-        string end();
-        void clear();
-        virtual void addContent(const string &s);
-        virtual string generate() = 0;
-};
-
-/*actual envs to use*/
-class mathInlineEnv : public texEnv
-{
-    public:
-        mathInlineEnv() : texEnv(){};
-        string generate();
-};
-
-class mathAlignedEnv : public texEnv
-{
-    public:
-        mathAlignedEnv() : texEnv("aligned"){};
-        void addContent(const string &s);
-        void addContent(const vector<string> &vs);
-
-        string generate();
-};
-
-typedef texEnv writerEnv;
 
 class texDoc
 {
     string m_type;
     vector<string> m_preamble;
-    vector<shared_ptr<texEnv> > m_envs;
+    stringstream m_data;
     stringstream m_content;
+    bool m_isGenerated;
 
     public:
-        explicit texDoc(const string &type = "standalone") : m_type(type), m_preamble({"amsmath"}){};
+        explicit texDoc(const string &type = "standalone",const vector<string> &preamble = {R"(\usepackage{amsmath})"})
+            : m_type(type), m_preamble(preamble), m_isGenerated(false){};
 
         void addPackages(const vector<string> &packages);
         void addInPreamble(const vector<string> &lines);
-        int addEnv(shared_ptr<texEnv> &env);
 
+        void addInlineMath(const string &m);
+        void addAlignedMath(const vector<string> &m);
+        void addSimpleText(const string &s);
+        
+        //todo
+        void addMatrixMath(void);
+        void addTimeDate(void);
+
+        string getContent();
         void generateContent();
-
         int saveToFile(const string &fname);
 };
 

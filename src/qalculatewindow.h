@@ -157,6 +157,11 @@ class QalculateWindow : public QMainWindow {
 		void updateInsertFunctionDialogs();
 		void updateStatusText();
 
+
+		/*HTW FUNCS*/
+
+		// int writeToFile(std::string data);
+
 	protected slots:
 
 		void testTimeout();

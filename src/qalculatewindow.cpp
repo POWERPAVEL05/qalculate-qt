@@ -9,6 +9,9 @@
     (at your option) any later version.
 */
 #include "htw/tutil.h"
+#include "qdebug.h"
+#include "qfileinfo.h"
+#include "qregion.h"
 
 #include <QLocalSocket>
 #include <QLocalServer>
@@ -53,6 +56,11 @@
 #include <QMimeData>
 #include <QScrollBar>
 #include <QStatusBar>
+
+#include <QDir>
+#include <QFile>
+#include <QProcess>
+
 #if defined _WIN32 && (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
 #	include <QStyleHints>
 #endif
@@ -142,6 +150,44 @@ bool bases_is_result = false;
 Number max_bases, min_bases;
 bool title_modified = false;
 MathStructure mauto, mauto_parsed;
+
+/* HTW GLOBAL VAR*/
+std::string parsed_tex;
+
+/* HTW FUNCS*/
+
+int writeToFile(QString data)
+{
+	const QString path =  QDir::homePath() + "/texData/";
+	QDir testDir(path);
+	QFileInfo fi(path);
+
+	// if(fi.exists()){//file with this name exists, take alternative
+	// 	return -1;
+	// }
+	if(!testDir.exists()){
+		if (!testDir.mkpath(path)) return -2;
+	}
+
+	QFile file(path + "inst0.txt");
+	if(!file.open(QIODevice::WriteOnly)){
+		return -3;
+	}
+	QTextStream out (&file);
+
+	out << "\\documentclass{standalone}\n\\usepackage{siunitx}\n\\usepackage{amsmath}\n\\begin{document}\n$" << data << "$\n" << "\\end{document}\n";
+
+	QDebug(QtDebugMsg) << data;
+
+    QString program = "pdflatex";
+    QStringList arguments;
+    arguments << "-output-directory" << path << file.fileName();
+
+    QProcess *myProcess = new QProcess();
+    myProcess->start(program, arguments);
+
+	return true;
+}
 
 bool contains_unknown_variable(const MathStructure &m) {
 	if(m.isVariable()) return !m.variable()->isKnown();
@@ -532,15 +578,15 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	/* ==HTW==
 	* TEST TO ADD BUTTON
 	*/
-	modeAction_t = new QToolButton(this);
-	modeAction_t->setText(tr("TEST"));
-	modeAction_t->setPopupMode(QToolButton::InstantPopup);
-	menu = new QMenu("TEST", this);
-	quitAction = menu->addAction(tr("Quit"), qApp, SLOT(closeAllWindows()));
-	modeAction_t->setMenu(menu);
-	menu->setToolTipsVisible(true);
-	menu->setToolTip("this is a tooltip");
-	tb->addWidget(modeAction_t);
+	// modeAction_t = new QToolButton(this);
+	// modeAction_t->setText(tr("TEST"));
+	// modeAction_t->setPopupMode(QToolButton::InstantPopup);
+	// menu = new QMenu("TEST", this);
+	// quitAction = menu->addAction(tr("Quit"), qApp, SLOT(closeAllWindows()));
+	// modeAction_t->setMenu(menu);
+	// menu->setToolTipsVisible(true);
+	// menu->setToolTip("this is a tooltip");
+	// tb->addWidget(modeAction_t);
 
 	/*==HTW==
 	* start of Mode button; first button from left
@@ -891,8 +937,10 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	}
 	ehSplitter->setStretchFactor(0, settings->expression_pos == 0 ? 0 : 1);
 	ehSplitter->setStretchFactor(1, settings->expression_pos == 0 ? 1 : 0);
-	ehSplitter->setCollapsible(0, false);
-	ehSplitter->setCollapsible(1, false);
+	// ehSplitter->setCollapsible(0, false);
+	// ehSplitter->setCollapsible(1, false);
+	ehSplitter->setCollapsible(0, true);
+	ehSplitter->setCollapsible(1, true);
 
 	/*==HTW==
 	* assumption: display versions for different bases
@@ -6193,7 +6241,7 @@ void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, Mat
 	} else {
 		original_expression = CALCULATOR->unlocalizeExpression(execute_str.empty() ? str : execute_str, settings->evalops.parse_options);
 		transform_expression_for_equals_save(original_expression, settings->evalops.parse_options);
-		//==HTW==calc
+		/*==HTW== calc mstruct, result; parsed_mstruct, parsed original expr; parsed_tostruct, result of conversion*/
 		CALCULATOR->calculate(mstruct, original_expression, 0, settings->evalops, parsed_mstruct, parsed_tostruct);
 	}
 
@@ -6391,6 +6439,7 @@ void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, Mat
 	}
 
 	if(!do_stack && !calculate_selection) previous_expression = execute_str.empty() ? str : execute_str;
+	//set Result to historyView here
 	setResult(NULL, true, stack_index == 0, true, "", do_stack, stack_index, false, false, calculate_selection);
 	prepend_mstruct.setUndefined();
 	
@@ -7784,8 +7833,10 @@ void ViewThread::run() {
 			MathStructure mp(*mparse);
 			mp.format(po);
 			if(compact) po.preserve_format = false;
-			// parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
-			parsed_text = "Hallo";
+			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
+			parsed_tex = mp.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+			//parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+			//parsed_text = "Hallo";
 			if(po.base == BASE_CUSTOM) {
 				CALCULATOR->setCustomOutputBase(nr_base);
 			}
@@ -7806,7 +7857,7 @@ void ViewThread::run() {
 			for(int index_r = 0; index_r < r; index_r++) {
 				for(int index_c = 0; index_c < c; index_c++) {
 					mm2.getElement(index_r + 1, index_c + 1)->format(po);
-					mstr = mm2.getElement(index_r + 1, index_c + 1)->print(po);
+					mstr = mm2.getElement(index_r + 1, index_c + 1)->print(po);//set matrix members to symbolics
 					mm->getElement(index_r + 1, index_c + 1)->set(mstr);
 				}
 			}
@@ -8091,6 +8142,7 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 		qApp->processEvents();
 		sleep_ms(10);
 	}
+	//viewthread out of critical section?
 	b_busy++;
 
 	if(was_busy) {
@@ -8185,6 +8237,18 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			if(autoCalculateTimer) autoCalculateTimer->stop();
 			/*original function:*/
 			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+
+			QDebug(QtDebugMsg) << historyView->toHtml();
+
+			int write_status = writeToFile(QString::fromStdString(parsed_tex));
+
+			if(write_status < 0)
+			{
+				QDebug(QtDebugMsg) << QString("failed writing") << write_status;
+			} 
+
+			//add image here ?
+
 			// adds only the result expr to historyView; second is sort of error
 			// historyView->addResult(htw::result_v, htw::entry_v[1], !parsed_approx, update_parse ? parsed_text : "", b_exact, htw::result_v.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 			// historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? "Lalbert" : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
