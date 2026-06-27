@@ -4,6 +4,8 @@
 
 #include "htw_texManager.h"
 #include "qfiledevice.h"
+#include "qglobal.h"
+#include "qprocess.h"
 
 using std::string;
 
@@ -51,12 +53,22 @@ QString texFile::getResult()
     return m_result;
 }
 
+QString texFile::getFilePath()
+{
+    return m_filePath;
+}
+
+QString texFile::getGenPath()
+{
+    return m_genFilePath;
+}
+
 bool texFile::generate()
 {
     if(m_isGenerated || !m_fileOpen) return false;
-
     QTextStream out(m_file);
     out << m_preamble << "\\begin{document}" <<  m_expr <<  "\\quad" << m_result << "\\end{document}";
+    m_file->flush();
     return true;
 }
 
@@ -75,9 +87,11 @@ texManager::texManager()
     //find texprog; assume pdflatex
     if(true)
     {
-        texProg = "pdflatex";
-        genTex = true;
+        m_texProg = "pdflatex";
+        m_genTex = true;
     }
+
+    m_proc =   new QProcess;
 }
 
 texManager::~texManager()
@@ -88,14 +102,22 @@ texManager::~texManager()
     }
 }
 
-void texManager::genFileat(size_t i)
+QString texManager::genFileat(texFile * file)
+{
+    if(!canGenerateTex() || !file) return "";
+    file->generate();
+    QStringList args;
+    args << file->getFilePath() << "-output-directory" << file->getGenPath();
+    m_proc->start(m_texProg,args);
+    //add here thread stuff
+    // m_proc->waitForFinished();
+    return file->getGenPath();
+}
+
+QString texManager::genFileat(size_t i)
 {
     texFile * file = at(i);
-    if(!canGenerateTex() || !file) return;
-
-    file->generate();
-    
-
+    return genFileat(file);
 }
 
 size_t texManager::getFileCount()
@@ -105,27 +127,25 @@ size_t texManager::getFileCount()
 
 bool texManager::canGenerateTex()
 {
-    return genTex;
+    return m_genTex;
 }
 
 texFile * texManager::at(size_t i)
 {
    texFile *ret;
-
-    try
-    {
+    try{
         ret  = m_files.at(i);
     }
-    catch(const std::out_of_range& ex)
-    {
+    catch(const std::out_of_range& ex){
         ret = nullptr;
     }
-
     return ret;
 }
 
 texFile * texManager::newFile(const QString &fname)
 {
+    QString name = fname; 
+    QDebug(QtDebugMsg) << name;
     texFile *ret = new texFile(fname,m_currentDir->absolutePath());
     m_files.push_back(ret);
     return ret;

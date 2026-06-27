@@ -9,6 +9,7 @@
     (at your option) any later version.
 */
 #include "htw/tutil.h"
+#include "htw_texManager.h"
 #include "qdebug.h"
 #include "qfileinfo.h"
 #include "qregion.h"
@@ -924,16 +925,22 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	expressionEdit->setFont(font);
 	expressionEdit->setFocus();
 
+	texMan = new texManager();
+	texTest = new QTextEdit(this);
+	texTest->setReadOnly(true);
+
 	historyView = new HistoryView(this);
 	historyView->expressionEdit = expressionEdit;
 	historyView->setReversed(settings->expression_pos != 0);
 
 	if(settings->expression_pos == 0) {
+		ehSplitter->addWidget(texTest);
 		ehSplitter->addWidget(expressionEdit);
 		ehSplitter->addWidget(historyView);
 	} else {
 		ehSplitter->addWidget(historyView);
 		ehSplitter->addWidget(expressionEdit);
+		ehSplitter->addWidget(texTest);
 	}
 	ehSplitter->setStretchFactor(0, settings->expression_pos == 0 ? 0 : 1);
 	ehSplitter->setStretchFactor(1, settings->expression_pos == 0 ? 1 : 0);
@@ -8237,6 +8244,12 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			if(autoCalculateTimer) autoCalculateTimer->stop();
 			/*original function:*/
 			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+
+			auto file = texMan->newFile("inst");
+
+			file->addInMain(QString::fromStdString(parsed_tex), "");
+
+			texTest->setHtml("<img src=\""+ texMan->genFileat(file) + "\">");
 
 			QDebug(QtDebugMsg) << historyView->toHtml();
 

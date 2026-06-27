@@ -43,10 +43,10 @@ QT += widgets network
 MOC_DIR = build
 OBJECTS_DIR = build
 
-HEADERS += src/calendarconversiondialog.h src/csvdialog.h src/dataseteditdialog.h src/datasetsdialog.h src/expressionedit.h src/fpconversiondialog.h src/functioneditdialog.h src/functionsdialog.h src/historyview.h src/itemproxymodel.h src/keypadwidget.h src/matrixwidget.h src/percentagecalculationdialog.h src/periodictabledialog.h src/plotdialog.h src/preferencesdialog.h src/qalculateqtsettings.h src/qalculatewindow.h src/unitsdialog.h src/uniteditdialog.h src/unknowneditdialog.h src/variableeditdialog.h src/variablesdialog.h \
-			src/htw/tutil.h
+HEADERS += src/calendarconversiondialog.h src/csvdialog.h src/dataseteditdialog.h src/datasetsdialog.h src/expressionedit.h src/fpconversiondialog.h src/functioneditdialog.h src/functionsdialog.h src/historyview.h src/itemproxymodel.h src/keypadwidget.h src/matrixwidget.h src/percentagecalculationdialog.h src/periodictabledialog.h src/plotdialog.h src/preferencesdialog.h src/qalculateqtsettings.h src/qalculatewindow.h src/unitsdialog.h src/uniteditdialog.h src/unknowneditdialog.h src/variableeditdialog.h src/variablesdialog.h src/htw_texManager.h
 
-SOURCES += src/htw/tutil.cpp src/calendarconversiondialog.cpp src/csvdialog.cpp src/dataseteditdialog.cpp src/datasetsdialog.cpp src/expressionedit.cpp src/fpconversiondialog.cpp src/functioneditdialog.cpp src/functionsdialog.cpp src/historyview.cpp src/itemproxymodel.cpp src/keypadwidget.cpp src/main.cpp src/matrixwidget.cpp src/percentagecalculationdialog.cpp src/periodictabledialog.cpp src/plotdialog.cpp src/preferencesdialog.cpp src/qalculateqtsettings.cpp src/qalculatewindow.cpp src/unitsdialog.cpp src/uniteditdialog.cpp src/unknowneditdialog.cpp src/variableeditdialog.cpp src/variablesdialog.cpp 
+SOURCES += src/htw/tutil.cpp src/calendarconversiondialog.cpp src/csvdialog.cpp src/dataseteditdialog.cpp src/datasetsdialog.cpp src/expressionedit.cpp src/fpconversiondialog.cpp src/functioneditdialog.cpp src/functionsdialog.cpp src/historyview.cpp src/itemproxymodel.cpp src/keypadwidget.cpp src/main.cpp src/matrixwidget.cpp src/percentagecalculationdialog.cpp src/periodictabledialog.cpp src/plotdialog.cpp src/preferencesdialog.cpp src/qalculateqtsettings.cpp src/qalculatewindow.cpp src/unitsdialog.cpp src/uniteditdialog.cpp src/unknowneditdialog.cpp src/variableeditdialog.cpp src/variablesdialog.cpp src/htw_texManager.cpp
+
 
 LANGUAGES = ca de en es fr ka nl pt_BR pt_PT ru sl sv zh_CN zh_TW
 

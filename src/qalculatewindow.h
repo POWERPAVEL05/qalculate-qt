@@ -21,6 +21,8 @@
 #include <QToolButton>
 #include <libqalculate/qalculate.h>
 
+#include "htw_texManager.h"
+
 class QLocalSocket;
 class QLocalServer;
 class QCommandLineParser;
@@ -70,6 +72,10 @@ class QalculateWindow : public QMainWindow {
 		bool updateWindowTitle(const QString &str = QString(), bool is_result = false, bool type_change = false);
 		void executeFromFile(const QString&);
 		void initFinished();
+
+		//htw
+		QTextEdit * texTest;
+		texManager * texMan;
 
 	protected:
 

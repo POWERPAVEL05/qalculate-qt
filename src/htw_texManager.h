@@ -39,34 +39,37 @@ class texFile
         
         QString getExpr();
         QString getResult();
+        QString getFilePath();
+        QString getGenPath();
         bool generate();
 };
 
 class texManager{
     
-    Q_OBJECT
+    //Q_OBJECT
 
 
     vector<texFile* > m_files;
     QDir *m_currentDir;
-    QString texProg;
-    QProcess * proc;
-    bool genTex = false;
+    QString m_texProg;
+    QProcess * m_proc;
+    bool m_genTex = false;
 
     public:
         texManager();
         ~texManager();
 
-        void genFileat(size_t i);
+        QString genFileat(size_t i);
+        QString genFileat(texFile * file);
         size_t getFileCount();
         bool canGenerateTex();
         texFile * at(size_t i);
 
         texFile * newFile(const QString &fname);
 
-    signals:
+    // signals:
 
-        void doneGenerating(int i);
+    //     void doneGenerating(int i);
 };
 
 static const string DEFAULT_PATH = QDir::homePath().toStdString() + "texData";
