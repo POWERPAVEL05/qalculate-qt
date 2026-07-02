@@ -322,11 +322,15 @@ class QalculateQtSettings : QObject {
 		bool copy_ascii, copy_ascii_without_units;
 		bool close_with_esc;
 		std::string custom_result_font, custom_expression_font, custom_keypad_font, custom_app_font, custom_status_font;
-		KnownVariable *vans[5], *v_memory;
-		MathStructure *current_result;
+		
+		KnownVariable *vans[5], *v_memory;//vars
+		MathStructure *current_result;//current result
 		MathFunction *f_answer;
+
+		//history
 		std::vector<MathStructure*> history_answer;
 		std::vector<std::string> expression_history;
+
 		QByteArray window_geometry, window_state, splitter_state;
 		QByteArray functions_geometry, functions_vsplitter_state, functions_hsplitter_state;
 		QByteArray units_geometry, units_vsplitter_state, units_hsplitter_state;
@@ -358,16 +362,21 @@ class QalculateQtSettings : QObject {
 		std::vector<std::string> recent_workspaces;
 		int save_workspace;
 
+		//important; tex needs to be synched to
 		std::vector<std::string> v_expression;
 		std::vector<std::string> v_parse;
 		std::vector<bool> v_pexact;
 		std::vector<bool> v_protected;
 		std::vector<long long int> v_time;
+
 		std::vector<std::vector<std::string> > v_result;
 		std::vector<std::vector<int> > v_exact;
-		std::vector<std::vector<size_t> > v_value;
+		std::vector<std::vector<size_t> > v_value;//count of history_answer at insertion
+
 		std::vector<QString> v_messages;
 		std::vector<bool> v_parseerror;
+
+
 		std::vector<MathFunction*> favourite_functions, recent_functions;
 		std::vector<Variable*> favourite_variables, recent_variables;
 		std::vector<Unit*> favourite_units, recent_units;

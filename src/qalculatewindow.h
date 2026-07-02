@@ -165,10 +165,10 @@ class QalculateWindow : public QMainWindow {
 
 
 		/*HTW FUNCS*/
-
-		// int writeToFile(std::string data);
+		void dialogTeX(const std::string&);
 
 	protected slots:
+
 
 		void testTimeout();
 		void updateBinEditSize(QFont* = NULL);

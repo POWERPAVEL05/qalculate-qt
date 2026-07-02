@@ -11,7 +11,11 @@
 #include "htw/tutil.h"
 #include "htw_texManager.h"
 #include "qdebug.h"
+#include "qdialog.h"
 #include "qfileinfo.h"
+#include "qglobal.h"
+#include "qlabel.h"
+#include "qlist.h"
 #include "qregion.h"
 
 #include <QLocalSocket>
@@ -153,7 +157,9 @@ bool title_modified = false;
 MathStructure mauto, mauto_parsed;
 
 /* HTW GLOBAL VAR*/
-std::string parsed_tex;
+std::string parsed_tex, result_tex, exact_tex;
+texFile *recent_file;
+QString recent_path;
 
 /* HTW FUNCS*/
 
@@ -188,6 +194,18 @@ int writeToFile(QString data)
     myProcess->start(program, arguments);
 
 	return true;
+}
+
+void QalculateWindow::dialogTeX(const string &s)
+{
+	QDialog *d0 = new QDialog(this);
+	QLabel *l0 = new QLabel(d0);
+
+	l0->setText(QString::fromStdString(s));
+
+	l0->show();
+
+	//display stuff here
 }
 
 bool contains_unknown_variable(const MathStructure &m) {
@@ -6446,6 +6464,7 @@ void QalculateWindow::calculateExpression(bool force, bool do_mathoperation, Mat
 	}
 
 	if(!do_stack && !calculate_selection) previous_expression = execute_str.empty() ? str : execute_str;
+
 	//set Result to historyView here
 	setResult(NULL, true, stack_index == 0, true, "", do_stack, stack_index, false, false, calculate_selection);
 	prepend_mstruct.setUndefined();
@@ -7849,6 +7868,11 @@ void ViewThread::run() {
 			}
 		}
 
+		if(mresult)
+		{
+			MathStructure mr(*mresult);
+			result_tex = mr.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+		}
 		if(mm && mresult->isMatrix()) {
 			PrintOptions po = settings->printops;
 			po.allow_non_usable = false;
@@ -8017,6 +8041,8 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 	bool save_neg = settings->printops.negative_exponents;
 
 	bool do_to = false;
+
+	bool genTeX = false;
 
 	if(!do_stack) {
 		if(to_base != 0 || to_fraction > 0 || to_fixed_fraction >= 2 || to_prefix != 0 || (to_caf >= 0 && to_caf != settings->complex_angle_form) || to_form != TO_FORM_OFF) {
@@ -8222,8 +8248,10 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 		}
 		int b_exact = (update_parse || !prev_approximate) && (exact_comparison || (!(*settings->printops.is_approximate) && !mstruct->isApproximate()));
 		if(alt_results.size() == 1 && (mstruct->isComparison() || ((mstruct->isLogicalAnd() || mstruct->isLogicalOr()) && mstruct->containsType(STRUCT_COMPARISON, true, false, false))) && (exact_comparison || b_exact || result_text.find(SIGN_ALMOST_EQUAL) != std::string::npos)) b_exact = -1;
+
 		size_t index = settings->v_expression.size();
 		bool b_add = true;
+
 		if(index > 0 && settings->current_result && !CALCULATOR->message() && (!update_parse || (settings->history_answer.size() > (mstruct_exact.isUndefined() ? 1 : 2) && !settings->rpn_mode && mstruct->equals(*settings->history_answer[settings->history_answer.size() - 1], true, true) && (mstruct_exact.isUndefined() || (settings->history_answer.size() > 1 && mstruct_exact.equals(*settings->history_answer[settings->history_answer.size() - 2], true, true))) && parsed_text == settings->v_parse[index - 1] && prev_result_text == settings->v_expression[index - 1] && parsed_approx != settings->v_pexact[index - 1] && !contains_rand_function(*parsed_mstruct))) && alt_results.size() <= settings->v_result[index - 1].size()) {
 			b_add = false;
 			for(size_t i = 0; i < alt_results.size(); i++) {
@@ -8242,23 +8270,28 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			auto_error = false;
 			auto_aborted = false;
 			if(autoCalculateTimer) autoCalculateTimer->stop();
+
+			auto file = texMan->newFile("inst");
+			QStringList ls0 {QString::fromStdString(result_tex)};
+			file->addInMain(QString::fromStdString(parsed_tex),ls0);
+			recent_path = texMan->genFileat(file);
+			genTeX = true;
+			recent_file = file;
+
 			/*original function:*/
 			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 
-			auto file = texMan->newFile("inst");
 
-			file->addInMain(QString::fromStdString(parsed_tex), "");
+			// texTest->setHtml("<img src=\""+ texMan->genFileat(file) + "\">");
 
-			texTest->setHtml("<img src=\""+ texMan->genFileat(file) + "\">");
+			// QDebug(QtDebugMsg) << historyView->toHtml();
 
-			QDebug(QtDebugMsg) << historyView->toHtml();
+			// int write_status = writeToFile(QString::fromStdString(parsed_tex));
 
-			int write_status = writeToFile(QString::fromStdString(parsed_tex));
-
-			if(write_status < 0)
-			{
-				QDebug(QtDebugMsg) << QString("failed writing") << write_status;
-			} 
+			// if(write_status < 0)
+			// {
+			// 	QDebug(QtDebugMsg) << QString("failed writing") << write_status;
+			// } 
 
 			//add image here ?
 
@@ -8320,6 +8353,18 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 		dialog->deleteLater();
 	}
 
+	/*call popup*/
+	if(genTeX){
+		QDialog *dialog = new QDialog(this);
+		QLabel *label = new QLabel(dialog);
+
+		label->setText("<img src=\""+recent_path+"\">");
+		// label->setText("<html><body><h1>hallo</h1></body></html>");
+		QDebug(QtDebugMsg) << label->text();
+
+		dialog->exec();
+		dialog->deleteLater();
+	}
 }
 
 bool QalculateWindow::eventFilter(QObject*, QEvent *e) {

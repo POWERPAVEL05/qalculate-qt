@@ -34,16 +34,34 @@
 #include <QTextFrame>
 #include <QDebug>
 
+#include <libqalculate/MathStructure.h>
 #include <libqalculate/qalculate.h>
 
 #include "expressionedit.h"
 #include "historyview.h"
 #include "qalculateqtsettings.h"
+#include "qdebug.h"
 #include "qglobal.h"
 #include "qtextcursor.h"
 
 
 //HTW
+MathStructure * HistoryView::mathStructAtContext(){
+	int i1 = -1, i2 = -1, i3 = -1;
+	QString astr;
+	indexAtPos(context_pos, &i1, &i2, &i3, &astr);
+	if(i1 < 0 && astr == "TR" && settings->current_result) return settings->current_result;//temp result
+	size_t value_index = 0;
+	if(i3 > 0) {
+		value_index = (size_t) i3;
+	} else if(i1 >= 0 && (size_t) i1 < settings->v_value.size()) {
+		if(i2 < 0) i2 = 0;
+		if(i2 >= 0 && (size_t) i2 < settings->v_value[i1].size()) value_index = settings->v_value[i1][i2];
+	}
+	if(value_index == 0 && i1 >= 0 && settings->current_result && i1 == (int) settings->v_value.size() - 1) return settings->current_result;
+	if(value_index == 0 || value_index > settings->history_answer.size()) return NULL;
+	return settings->history_answer[value_index - 1];
+}
 
 void HistoryView::debug(const QPoint &pos){
 	QString sref = anchorAt(pos);
@@ -73,6 +91,16 @@ void HistoryView::debug(const QPoint &pos){
 
 void HistoryView::debugAnalyze(){
 	debug(context_pos);	
+}
+
+void HistoryView::editGetPos()
+{
+	QString anchorstr;
+	int i1 = -1, i2 = -1, i3 = -1;
+	indexAtPos(context_pos, &i1, &i2, &i3,&anchorstr);
+	QDebug(QtDebugMsg) << "i1: " << i1 << "i2: " << i2 << "i3: " << i3 << "\n" << "AnchorStr: " << anchorstr << "\n";
+	QDebug(QtDebugMsg) << settings->current_result << "\n";
+
 }
 
 //HTW END
@@ -1130,8 +1158,8 @@ void HistoryView::reloadHistory() {
 }
 void HistoryView::editRemove() {
 	int i1 = -1, i2 = -1;
-	indexAtPos(context_pos, &i1, &i2);
-	if(i1 < 0 || i1 >= (int) settings->v_expression.size()) return;
+	indexAtPos(context_pos, &i1, &i2);//get position
+	if(i1 < 0 || i1 >= (int) settings->v_expression.size()) return; //temp or not valid
 	if(i2 >= 0 && i2 < (int) settings->v_result[i1].size()) {
 		bool remove_expression = true;
 		for(size_t i = 0; i < settings->v_result[i1].size(); i++) {
@@ -1140,7 +1168,7 @@ void HistoryView::editRemove() {
 				break;
 			}
 		}
-		if(remove_expression) {
+		if(remove_expression) {//remove whole block
 			i2 = -1;
 		} else {
 			settings->v_result[i1].erase(settings->v_result[i1].begin() + i2);
@@ -1323,7 +1351,12 @@ void HistoryView::contextMenuEvent(QContextMenuEvent *e) {
 		cmenu->addSeparator();
 		delAction = cmenu->addAction(tr("Remove"), this, SLOT(editRemove()));
 		clearAction = cmenu->addAction(tr("Clear"), this, SLOT(editClear()));
+
+		//debug actions
+		cmenu->addSeparator();
 		debugAction = cmenu->addAction("debug", this, SLOT(debugAnalyze()));
+		posAction = cmenu->addAction("pos", this, SLOT(editGetPos()));
+
 		if(fileMenu) {
 			fileSeparator = cmenu->addSeparator();
 			cmenu->addAction(modeMenu->menuAction());
@@ -1331,14 +1364,16 @@ void HistoryView::contextMenuEvent(QContextMenuEvent *e) {
 			cmenu->addAction(tbAction);
 		}
 	}
+	posAction->setEnabled(true);
 	debugAction->setEnabled(true);
 	int i1 = -1, i2 = -1, i3 = -1;
 	QString astr;
 	context_pos = e->pos();
 	indexAtPos(context_pos, &i1, &i2, &i3, &astr);
-	bool b_tmp = (i1 < 0 && (astr == "TR" || astr == "TP"));
+	bool b_tmp = (i1 < 0 && (astr == "TR" || astr == "TP"));// is temp window
 	selectAllAction->setEnabled(!document()->isEmpty());
 	protectAction->setChecked(i1 >= 0 && i1 < (int) settings->v_protected.size() && settings->v_protected[i1]);
+	//valid window || or temp window and no textselection
 	if((i1 >= 0 || b_tmp) && e->reason() == QContextMenuEvent::Mouse && !textCursor().hasSelection()) {
 		if(i2 < 0) i2 = 0;
 		bool b_edit = (!astr.isEmpty() && astr[0] == 'c') || (!b_tmp && i2 < (int) settings->v_result[i1].size() && ((!settings->v_result[i1][i2].empty() && settings->v_result[i1][i2][0] == '#') || (i2 > 0 && !settings->v_result[i1][i2 - 1].empty() && settings->v_result[i1][i2 - 1][0] == '#')));

@@ -1,0 +1,4 @@
+- write script for generating pdf / png tex
+- change members of texfile
+- figure out position of in HistoryView via logging
+- insert image; test via extra window

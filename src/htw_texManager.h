@@ -2,59 +2,38 @@
 #ifndef H_HTW_TEXMANAGER
 #define H_HTW_TEXMANAGER
 
+#include "qobject.h"
 #include "qobjectdefs.h"
 #include <cstddef>
 #include <vector>
 #include <string>
 #include <sstream>
+#include "htw_texFile.h"
 
 #include <QFile>
 #include <QDir>
 #include <QProcess>
+#include <QTemporaryFile>
 
 using std::vector;
 using std::string;
 using std::stringstream;
 
-
-class texFile
-{
-    QString m_filePath = "";
-    QString m_genFilePath = "";
-    QFile *m_file = nullptr;
-
-    QString m_preamble;
-    QString m_expr {""};
-    QString m_result {""};
-
-    bool m_isGenerated = false;
-    bool m_fileOpen = false;
-
-    public:
-        texFile(const QString &fname, const QString &filepath,const QString &type = "standalone",const QString &preamble = {R"(\usepackage{amsmath}\usepackage{siunitx})"});
-        ~texFile();
-
-        void addInPreamble(const QString &lines, bool package);
-        void addInMain(const QString &expr,const QString &result);
-        
-        QString getExpr();
-        QString getResult();
-        QString getFilePath();
-        QString getGenPath();
-        bool generate();
-};
-
-class texManager{
+class texManager : public QObject{
     
-    //Q_OBJECT
+    Q_OBJECT
 
-
-    vector<texFile* > m_files;
+    QTemporaryFile *m_ftemp;
     QDir *m_currentDir;
     QString m_texProg;
     QProcess * m_proc;
+    
+    vector<texFile* > m_files;
+    size_t m_total = 0;
+    
     bool m_genTex = false;
-
+    bool m_canGenTex = false;
+    
     public:
         texManager();
         ~texManager();
@@ -67,12 +46,32 @@ class texManager{
 
         texFile * newFile(const QString &fname);
 
-    // signals:
+    // public slots:
 
-    //     void doneGenerating(int i);
+    //     void onMoveTop(int id);
+    //     void onClear();
+    //     void onRemove(int id);
 };
 
-static const string DEFAULT_PATH = QDir::homePath().toStdString() + "texData";
 static const bool default_tex_path = true;
+
+#define DEFAULT_PATH (QDir::homePath().toStdString() + "/.texData/")
+
+#define SCRIPT_GENCONV \
+        "#! /usr/bin/bash\n\
+        echo $1 >> ~/hallo.log\n\
+        echo $2 >> ~/hallo.log\n\
+        if [[ -z $1 || -z $2 ]] ; then\n\
+            exit 1\n\
+        fi\n\
+        pdflatex -output-directory $2 \"$1.tex\" > /dev/zero\n\
+        if [[ $? -ne 0 ]] ; then\n\
+            exit 2\n\
+        fi\n\
+        pdftoppm \"$1.pdf\" -jpeg > $1.jpeg\n\
+        if [[ $? -ne 0 ]] ; then\n\
+            exit 3\n\
+        fi\n\
+        exit 0"
 
 #endif

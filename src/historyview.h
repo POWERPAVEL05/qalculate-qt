@@ -13,6 +13,7 @@
 #define HISTORY_VIEW_H
 
 #include <QTextEdit>
+#include"libqalculate/includes.h" //mathstructure
 
 class QImage;
 class QMenu;
@@ -59,7 +60,7 @@ class HistoryView : public QTextEdit {
 		int has_lock_symbol;
 		QMenu *cmenu, *fileMenu, *modeMenu;
 		QAction *insertTextAction, *insertValueAction, *copyAction, *copyFormattedAction, *copyAsciiAction, *selectAllAction, *delAction, *clearAction, *protectAction, *movetotopAction, *tbAction, *fileSeparator, *findDateAction, *commentAction;
-		QAction * debugAction;
+		QAction *debugAction, *posAction;
 		QColor text_color;
 		QRect prev_fonti;
 		QPoint context_pos;
@@ -79,6 +80,9 @@ class HistoryView : public QTextEdit {
 		void resizeEvent(QResizeEvent*) override;
 		void editComment(int, int);
 		void updateTopMargin();
+		
+		//htw
+		MathStructure *mathStructAtContext();
 
 	protected slots:
 
@@ -100,13 +104,19 @@ class HistoryView : public QTextEdit {
 		void editComment();
 		void reloadHistory();
 
-		void debugAnalyze();//HTW
+		//htw
+		void debugAnalyze();
+		void editGetPos();
 
 	signals:
 
 		void insertTextRequested(std::string);
 		void insertValueRequested(int);
 		void historyReloaded();
+
+		void historyCleared();
+		void historyMovedTop(int);
+		void historyRemoved(int);
 
 };
 
