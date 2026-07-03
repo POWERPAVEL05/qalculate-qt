@@ -276,6 +276,7 @@ QalculateQtSettings::QalculateQtSettings() {
 	FILE *file = fopen(filename.c_str(), "r");
 	char line[10000];
 	bool b1 = false, b2 = false;
+	tex_enable = true;/*htw*/
 	std::string stmp;
 	if(file) {
 		while(true) {

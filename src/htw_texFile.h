@@ -45,6 +45,7 @@ class texFile : QObject{
 
         void addInPreamble(const QString &, bool);
         void addInMain(const QString &,const QStringList &);
+        void appendResult(const QString &);
         
         QString getFilePath(bool = false);
         bool generate();

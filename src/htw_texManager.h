@@ -43,14 +43,17 @@ class texManager : public QObject{
         size_t getFileCount();
         bool canGenerateTex();
         texFile * at(size_t i);
-
         texFile * newFile(const QString &fname);
 
-    // public slots:
+    public slots:
+		void onhistoryCleared();
+		void onhistoryMovedTop(int);
+		void onhistoryRemoved(int);
+        void onProcDone(int id, QString path);
 
-    //     void onMoveTop(int id);
-    //     void onClear();
-    //     void onRemove(int id);
+    signals:
+        void texManDoneGenerating(int id, QString path);
+
 };
 
 static const bool default_tex_path = true;

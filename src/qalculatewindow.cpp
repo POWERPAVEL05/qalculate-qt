@@ -8,7 +8,6 @@
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 */
-#include "htw/tutil.h"
 #include "htw_texManager.h"
 #include "qdebug.h"
 #include "qdialog.h"
@@ -7859,10 +7858,11 @@ void ViewThread::run() {
 			MathStructure mp(*mparse);
 			mp.format(po);
 			if(compact) po.preserve_format = false;
+			
+			//htw
 			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
 			parsed_tex = mp.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
-			//parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
-			//parsed_text = "Hallo";
+
 			if(po.base == BASE_CUSTOM) {
 				CALCULATOR->setCustomOutputBase(nr_base);
 			}
@@ -8271,7 +8271,7 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			auto_aborted = false;
 			if(autoCalculateTimer) autoCalculateTimer->stop();
 
-			auto file = texMan->newFile("inst");
+			auto file = texMan->newFile("inst");//check here if append or normal gen is needed
 			QStringList ls0 {QString::fromStdString(result_tex)};
 			file->addInMain(QString::fromStdString(parsed_tex),ls0);
 			recent_path = texMan->genFileat(file);
@@ -8281,23 +8281,6 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			/*original function:*/
 			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 
-
-			// texTest->setHtml("<img src=\""+ texMan->genFileat(file) + "\">");
-
-			// QDebug(QtDebugMsg) << historyView->toHtml();
-
-			// int write_status = writeToFile(QString::fromStdString(parsed_tex));
-
-			// if(write_status < 0)
-			// {
-			// 	QDebug(QtDebugMsg) << QString("failed writing") << write_status;
-			// } 
-
-			//add image here ?
-
-			// adds only the result expr to historyView; second is sort of error
-			// historyView->addResult(htw::result_v, htw::entry_v[1], !parsed_approx, update_parse ? parsed_text : "", b_exact, htw::result_v.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
-			// historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? "Lalbert" : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 		} else if(update_parse) {
 			settings->history_answer.pop_back();
 			if(!mstruct_exact.isUndefined()) settings->history_answer.pop_back();
@@ -8355,6 +8338,7 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 
 	/*call popup*/
 	if(genTeX){
+		return;
 		QDialog *dialog = new QDialog(this);
 		QLabel *label = new QLabel(dialog);
 

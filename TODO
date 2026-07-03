@@ -1,4 +1,41 @@
-- write script for generating pdf / png tex
-- change members of texfile
-- figure out position of in HistoryView via logging
-- insert image; test via extra window
+- write script for generating pdf / png tex done
+- change members of texfile done
+- figure out position of in HistoryView via logging done
+- insert image; test via extra window done half
+
+- add into historyview "<img src="" >"
+- account for changes in result --claude--> some parameters are omitted; call a regenerate/new file delete old one and replace path
+- account for deletions etc and reload
+
+
+- HistoryView:
+    - loadInitial() called on every interaction with historyview; with reload true; uses add result
+    - 
+
+- change starting input
+
+- check if append is happening or not (by means of checking update_parse if false = append)
+    - append new result to current file
+    - or create new file and append to file stack
+- synch paths with qsetting @ v_tex_files
+- add result as usual
+
+- qprocess emits a finish through texManager, linked to historyView
+    - reload history
+
+
+on deletion:
+- add way to update file numbers to match order -> less file clutter
+
+
+todo:
+    - add better latex input to file
+        - more global tex parameters for viewthread to process
+        - slight change to archictecture?
+    - add slot and signal: qproc <->  texMan(finished); texMan <-> HistoryView
+    - add synch between texman and qalc settings
+    - find correct place to instert html and do that
+    
+
+    - add button for tex enable
+    - might add lock on generation

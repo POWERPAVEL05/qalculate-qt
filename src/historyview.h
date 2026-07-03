@@ -14,6 +14,7 @@
 
 #include <QTextEdit>
 #include"libqalculate/includes.h" //mathstructure
+#include "qobject.h"
 
 class QImage;
 class QMenu;
@@ -107,6 +108,7 @@ class HistoryView : public QTextEdit {
 		//htw
 		void debugAnalyze();
 		void editGetPos();
+		void onTexManGenDone(int,QString);
 
 	signals:
 

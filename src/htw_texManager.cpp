@@ -48,6 +48,12 @@ bool texFile::generate()
     return true;
 }
 
+void texFile::appendResult(const QString &res)
+{
+    m_results << res;
+    m_isGenerated = false;
+}
+
 texFile::~texFile()
 {
     if(m_file) delete m_file;
@@ -125,13 +131,14 @@ QString texManager::genFileat(texFile * file)
     m_ftemp->open();
     m_proc->start("bash",args);
 
-    m_proc->waitForFinished();
-    QDebug(QtDebugMsg) << m_proc->exitCode() << file->getFilePath() << "\n";
+    // m_proc->waitForFinished();
+    // QDebug(QtDebugMsg) << m_proc->exitCode() << file->getFilePath() << "\n";
 
-    // if(!m_proc->waitForStarted()){
-    //     qDebug() << "Failed to start:" << m_proc->errorString();
-    //     return "";
-    // }
+    /* debug */
+    if(!m_proc->waitForStarted()){
+        qDebug() << "Failed to start:" << m_proc->errorString();
+        return "";
+    }
     // m_proc->waitForFinished();
     // qDebug() << "exit code:" << m_proc->exitCode();
     // qDebug() << "exit status:" << m_proc->exitStatus(); // NormalExit vs CrashExit
@@ -151,6 +158,7 @@ texFile * texManager::newFile(const QString &fname)
 {
     texFile *ret = new texFile(fname,m_currentDir);
     m_files.push_back(ret);
+    settings->v_tex_files.push_back("");//signal no file for this slot
     return ret;
 }
 QString texManager::genFileat(size_t i)
@@ -179,4 +187,14 @@ texFile * texManager::at(size_t i)
         ret = nullptr;
     }
     return ret;
+}
+
+void texManager::onhistoryCleared(){
+    return;
+}
+void texManager::onhistoryMovedTop(int){
+    return;
+}
+void texManager::onhistoryRemoved(int){
+    return;
 }

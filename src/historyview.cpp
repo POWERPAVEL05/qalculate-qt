@@ -63,6 +63,12 @@ MathStructure * HistoryView::mathStructAtContext(){
 	return settings->history_answer[value_index - 1];
 }
 
+void HistoryView::onTexManGenDone(int,QString)
+{
+
+}
+
+//debug
 void HistoryView::debug(const QPoint &pos){
 	QString sref = anchorAt(pos);
 
@@ -79,7 +85,7 @@ void HistoryView::debug(const QPoint &pos){
 
 	cur.movePosition(QTextCursor::Start,QTextCursor::MoveAnchor);
 	cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
-
+	
 	while(!cur.atEnd())
 	{
 		cur.movePosition(QTextCursor::EndOfBlock,QTextCursor::KeepAnchor);
@@ -798,12 +804,22 @@ void HistoryView::addResult(std::vector<std::string> values, std::string express
 				}
 			}
 			str += "/>";
+
+		}
+		if(!temporary && !initial_load){
+			str += "<td>hallo</td>";
 		}
 		if(!temporary || !values[i].empty()) str += "</a>";
+
+		// str+= "</td>";
+		// str+="</tr>";
+
 		str += "</td></tr>";
 		i_answer_pre = i_answer;
 		n++;
 	}
+
+	/*htw*/
 	str.replace("\n", "<br>");
 	str.replace(QChar(0x2028), "<br>");
 	int i = 0;

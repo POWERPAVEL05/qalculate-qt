@@ -16,6 +16,7 @@
 #include <QLineEdit>
 #include <QIcon>
 #include <libqalculate/qalculate.h>
+#include <vector>
 
 class QWidget;
 class QWindow;
@@ -376,6 +377,9 @@ class QalculateQtSettings : QObject {
 		std::vector<QString> v_messages;
 		std::vector<bool> v_parseerror;
 
+		//htw
+		std::vector<QString> v_tex_files;
+		bool tex_enable;
 
 		std::vector<MathFunction*> favourite_functions, recent_functions;
 		std::vector<Variable*> favourite_variables, recent_variables;
