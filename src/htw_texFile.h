@@ -36,8 +36,6 @@ class texFile : QObject{
 
     bool m_isGenerated = false;
     bool m_fileOpen = false;
-    bool m_manyResult = false;
-
 
     public:
         texFile(const QString &, QDir *,const QString & = "standalone",const QString & = {R"(\usepackage{amsmath}\usepackage{siunitx})"});

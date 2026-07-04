@@ -31,7 +31,7 @@ texFile::texFile(const QString &fname,QDir * dir,const QString &type ,const QStr
     {
         //TODO: add rubbish files
         settings->tempfiles.push_back(m_file->fileName());/*kill file later*/ 
-        // settings->tempfiles.push_back(getFilePath(true)+".jpeg");/*kill file later*/ 
+        settings->tempfiles.push_back(getFilePath(true)+".jpeg");/*kill file later*/ 
         m_fileOpen = true;
     } 
 }
@@ -78,7 +78,6 @@ void texFile::addInMain(const QString &expr,const QStringList &results)
 {
     m_expr = expr;
     m_results = results;
-    if(m_results.size() > 1) m_manyResult = true;
 }
 
 QString texFile::getFilePath(bool noExt)

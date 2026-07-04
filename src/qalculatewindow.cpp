@@ -7864,10 +7864,10 @@ void ViewThread::run() {
 			mp.format(po);
 			if(compact) po.preserve_format = false;
 			
-			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);//htw
+			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
 			tex_po = po;
 			tex_po.use_unicode_signs = UNICODE_SIGNS_OFF;
-			parsed_tex = mp.print(tex_po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+			parsed_tex = mp.print(tex_po, settings->format_result, settings->color, TAG_TYPE_LATEX);//htw
 
 			if(po.base == BASE_CUSTOM) {
 				CALCULATOR->setCustomOutputBase(nr_base);
