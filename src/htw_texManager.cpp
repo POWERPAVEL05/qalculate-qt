@@ -217,6 +217,7 @@ void texManager::onhistoryMovedTop(int i1){
 }
 void texManager::onhistoryRemoved(int i1){
 
+    QDebug(QtDebugMsg) << "rem: " << i1;
     if(i1 < (int)m_files.size()){
         m_files.erase(m_files.begin()+i1);
     }
