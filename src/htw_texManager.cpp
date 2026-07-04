@@ -30,10 +30,9 @@ texFile::texFile(const QString &fname,QDir * dir,const QString &type ,const QStr
     if(m_file->open(QIODevice::ReadWrite | QIODevice::Text))
     {
         //TODO: add rubbish files
-        // settings->tempfiles.push_back(m_file->fileName());/*kill file later*/ 
-        // settings->tempfiles.push_back(getFilePath(true)+"jpeg");/*kill file later*/ 
+        settings->tempfiles.push_back(m_file->fileName());/*kill file later*/ 
+        // settings->tempfiles.push_back(getFilePath(true)+".jpeg");/*kill file later*/ 
         m_fileOpen = true;
-        QDebug(QtDebugMsg) << "Opened" << m_file->fileName()<< "\n";
     } 
 }
 
@@ -41,19 +40,28 @@ bool texFile::generate()
 {
     if(m_isGenerated || !m_fileOpen) return false;/*file not processed correctly*/
     m_file->resize(0);//avoid bad write one regeneratoin
+
     QTextStream out(m_file);
-    out << m_preamble << "\\begin{document}" <<  m_expr <<  " \\quad ";
+    out << m_preamble;
+    out << "\\begin{document}$";
+    out << "\\begin{aligned}\n";
+    out << m_expr;
+
     for(auto s : m_results) out << s;
-    out << "\\end{document}\n";
+
+
+    out << "\n\\end{aligned}\n";
+    out << "$\\end{document}\n";
 
     QDebug(QtDebugMsg) << m_expr << m_results;
     return true;
 }
 
-void texFile::appendResult(const QString &res)
+void texFile::appendResult(const QString &res,bool isExact)
 {
-    m_results << res;
-    m_isGenerated = false;
+    QString str {isExact ? "= " : "\\approx "};
+    m_results << "\\\\ " << (isExact ? "&= " : "&\\approx") << res;
+    m_isGenerated = false;//regeneration possible
 }
 
 texFile::~texFile()
@@ -111,13 +119,13 @@ texManager::texManager()
     m_ftemp->setPermissions(perms);
 
     m_proc =  new QProcess;
-    connect(m_proc,SIGNAL(finished(int,QProcess::exitStatus)),this,SLOT(onProcDone(int,QProcess::exitStatus)));
+    connect(m_proc,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(onProcDone(int,QProcess::ExitStatus)));
 
     for(auto i : settings->v_expression) m_files.push_back(nullptr);
 }
 
 void texManager::onProcDone(int exitCode,QProcess::ExitStatus status){
-    if(exitCode > 0 || status == QProcess::ExitStatus::CrashExit) return;
+    if(exitCode > 0 || status == QProcess::ExitStatus::CrashExit) return;//crash and burn
     emit texManDoneGenerating(0,"");
 }
 
@@ -217,6 +225,7 @@ void texManager::onhistoryMovedTop(int i1){
 }
 void texManager::onhistoryRemoved(int i1){
 
+    m_proc->kill();
     QDebug(QtDebugMsg) << "rem: " << i1;
     if(i1 < (int)m_files.size()){
         m_files.erase(m_files.begin()+i1);

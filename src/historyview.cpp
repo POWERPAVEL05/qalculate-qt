@@ -66,7 +66,7 @@ MathStructure * HistoryView::mathStructAtContext(){
 
 void HistoryView::onTexManGenDone(int,QString)
 {
-	return;
+	reloadHistory();
 }
 
 //debug
@@ -440,7 +440,7 @@ void HistoryView::loadInitial(bool reload) {
 			}
 			QDebug(QtDebugMsg) << "add result" << i << " " << settings->v_tex_files[i];
 			// addResult( ( settings->tex_enable && reload && i < settings->v_tex_files.size() ) ? settings->v_tex_files[i] :"",settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload ? 2 : 1, i);
-			addResult( settings->v_tex_files[i],settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload ? 2 : 1, i);
+			addResult(settings->v_tex_files[i],settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload ? 2 : 1, i);
 		}
 		if((settings->color == 2 && (s_text.contains("color:#00") || s_text.contains("color:#58"))) || (settings->color != 2 && (s_text.contains("color:#FF") || s_text.contains("color:#AA")))) {
 			replaceColors(s_text);
@@ -820,7 +820,7 @@ void HistoryView::addResult(QString ftname,std::vector<std::string> values, std:
 		}
 
 		if(!temporary && settings->tex_enable && !ftname.isEmpty()){
-			str += QString("</td><td><img src=\"%1\"></td>").arg(ftname);
+			str += QString("<td><img src=\"%1\"></td></tr>").arg(ftname);
 		}
 
 		if(!temporary || !values[i].empty()) str += "</a>";

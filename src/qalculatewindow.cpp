@@ -65,6 +65,7 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <libqalculate/includes.h>
 
 #if defined _WIN32 && (QT_VERSION >= QT_VERSION_CHECK(6, 5, 0))
 #	include <QStyleHints>
@@ -157,7 +158,9 @@ bool title_modified = false;
 MathStructure mauto, mauto_parsed;
 
 /* HTW GLOBAL VAR*/
-std::string parsed_tex, result_tex, exact_tex;
+std::string parsed_tex, result_tex;
+bool exact_tex;
+
 texFile *recent_file;
 QString recent_path;
 
@@ -7807,7 +7810,8 @@ bool contains_large_matrix(const MathStructure &m) {
 void ViewThread::run() {
 
 	while(true) {
-
+		PrintOptions tex_po;
+		exact_tex = false;
 		void *x = NULL;
 		if(!read(&x) || !x) break;
 		MathStructure *mresult = (MathStructure*) x;
@@ -7860,9 +7864,10 @@ void ViewThread::run() {
 			mp.format(po);
 			if(compact) po.preserve_format = false;
 			
-			//htw
-			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);
-			parsed_tex = mp.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+			parsed_text = mp.print(po, settings->format_result, settings->color, TAG_TYPE_HTML);//htw
+			tex_po = po;
+			tex_po.use_unicode_signs = UNICODE_SIGNS_OFF;
+			parsed_tex = mp.print(tex_po, settings->format_result, settings->color, TAG_TYPE_LATEX);
 
 			if(po.base == BASE_CUSTOM) {
 				CALCULATOR->setCustomOutputBase(nr_base);
@@ -7872,8 +7877,10 @@ void ViewThread::run() {
 		if(mresult)
 		{
 			MathStructure mr(*mresult);
-			result_tex = mr.print(po, settings->format_result, settings->color, TAG_TYPE_LATEX);
+			if(mr.isApproximate()) exact_tex = true;
+			result_tex = mr.print(tex_po, settings->format_result, settings->color, TAG_TYPE_LATEX);
 		}
+
 		if(mm && mresult->isMatrix()) {
 			PrintOptions po = settings->printops;
 			po.allow_non_usable = false;
@@ -8276,10 +8283,10 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 				texFile * file;	
 				if(!update_parse){//append result
 					file = texMan->at(texMan->getFileCount()-1);
-					file->appendResult(QString::fromStdString(result_tex));
+					file->appendResult(QString::fromStdString(result_tex),exact_tex);
 				}else{
 					file = texMan->newFile("inst");//check here if append or normal gen is needed
-					QStringList ls0 {QString::fromStdString(result_tex)};
+					QStringList ls0 {"&= "+QString::fromStdString(result_tex)};
 					file->addInMain(QString::fromStdString(parsed_tex),ls0);
 				}
 				recent_path = texMan->genFileat(file,update_parse);
@@ -8288,7 +8295,7 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			}
 
 			/*original function:*/
-			historyView->addResult(settings->tex_enable ? recent_path : "",alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+			historyView->addResult(settings->tex_enable && update_parse ? recent_path : "",alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 
 		} else if(update_parse) {
 			settings->history_answer.pop_back();
