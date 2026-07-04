@@ -8,6 +8,7 @@
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 */
+#include "htw_texFile.h"
 #include "htw_texManager.h"
 #include "qdebug.h"
 #include "qdialog.h"
@@ -942,29 +943,29 @@ QalculateWindow::QalculateWindow() : QMainWindow() {
 	expressionEdit->setFont(font);
 	expressionEdit->setFocus();
 
+	//htw add texman
 	texMan = new texManager();
-	texTest = new QTextEdit(this);
-	texTest->setReadOnly(true);
 
 	historyView = new HistoryView(this);
 	historyView->expressionEdit = expressionEdit;
 	historyView->setReversed(settings->expression_pos != 0);
 
+	connect(texMan,SIGNAL(texManDoneGenerating(int,QString)),historyView,SLOT(onTexManGenDone(int,QString)));
+	connect(historyView,SIGNAL(historyCleared()),texMan,SLOT(onhistoryCleared()));
+	connect(historyView,SIGNAL(historyMovedTop(int)),texMan,SLOT(onhistoryMovedTop(int)));
+	connect(historyView,SIGNAL(historyRemoved(int)),texMan,SLOT(onhistoryRemoved(int)));
+
 	if(settings->expression_pos == 0) {
-		ehSplitter->addWidget(texTest);
 		ehSplitter->addWidget(expressionEdit);
 		ehSplitter->addWidget(historyView);
 	} else {
 		ehSplitter->addWidget(historyView);
 		ehSplitter->addWidget(expressionEdit);
-		ehSplitter->addWidget(texTest);
 	}
 	ehSplitter->setStretchFactor(0, settings->expression_pos == 0 ? 0 : 1);
 	ehSplitter->setStretchFactor(1, settings->expression_pos == 0 ? 1 : 0);
-	// ehSplitter->setCollapsible(0, false);
-	// ehSplitter->setCollapsible(1, false);
-	ehSplitter->setCollapsible(0, true);
-	ehSplitter->setCollapsible(1, true);
+	ehSplitter->setCollapsible(0, false);
+	ehSplitter->setCollapsible(1, false);
 
 	/*==HTW==
 	* assumption: display versions for different bases
@@ -7016,7 +7017,7 @@ void QalculateWindow::onStatusChanged(QString status, bool is_expression, bool h
 		auto_exact_text = "";
 		mauto.setAborted();
 		CALCULATOR->addMessages(&expressionEdit->status_messages);
-		historyView->addResult(values, current_text, true, auto_expression, false, false, QString(), NULL, 0, 0, true);
+		historyView->addResult("",values, current_text, true, auto_expression, false, false, QString(), NULL, 0, 0, true);
 		updateWindowTitleResult("");
 	} else {
 		if(!had_error && (!had_warning || last_op) && !auto_error && !auto_calculation_updated && !auto_format_updated && ((prev_autocalculable != 0 && auto_expression == status.toStdString() && (last_op || (settings->history_expression_type != HISTORY_EXPRESSION_TYPE_PARSED_COMPACT && settings->history_expression_type != HISTORY_EXPRESSION_TYPE_ENTERED_AND_PARSED_COMPACT) || (expressionEdit->textCursor().atEnd() && expressionEdit->toPlainText().endsWith(" "))) && (last_op || auto_expression.find(CALCULATOR->localToString()) == std::string::npos)) || (last_op && auto_expression.empty() && auto_result.empty())) && (last_op || !settings->adaptive_autocalc_delay || prev_autocalculable != 2 || expressionEdit->parsedCalculable() != 1 || !auto_result.empty())) {
@@ -7042,7 +7043,7 @@ void QalculateWindow::onStatusChanged(QString status, bool is_expression, bool h
 				auto_error = had_error || had_warning;
 				std::vector<std::string> values;
 				CALCULATOR->addMessages(&expressionEdit->status_messages);
-				historyView->addResult(values, current_text, true, auto_expression, false, false, QString(), NULL, 0, 0, true);
+				historyView->addResult("",values, current_text, true, auto_expression, false, false, QString(), NULL, 0, 0, true);
 			}
 			if(had_error) {
 				updateWindowTitleResult("");
@@ -7740,7 +7741,7 @@ void QalculateWindow::autoCalculateTimeout() {
 	auto_expression = current_status.toStdString();
 	CALCULATOR->addMessages(&messages);
 	if(!values.empty() && (mauto.isComparison() || ((mauto.isLogicalAnd() || mauto.isLogicalOr()) && mauto.containsType(STRUCT_COMPARISON, true, false, false))) && (exact_comparison || b_exact || values[0].find(SIGN_ALMOST_EQUAL) != std::string::npos)) b_exact = -1;
-	historyView->addResult(values, "", true, auto_expression, b_exact, false, flag, NULL, 0, 0, true, values.empty() ? "" : single_result);
+	historyView->addResult("",values, "", true, auto_expression, b_exact, false, flag, NULL, 0, 0, true, values.empty() ? "" : single_result);
 	updateWindowTitleResult(auto_result_text);
 	if(contains_updating_time(mauto_parsed)) {
 		auto_calculation_updated = true;
@@ -8271,15 +8272,23 @@ void QalculateWindow::setResult(Prefix *prefix, bool update_history, bool update
 			auto_aborted = false;
 			if(autoCalculateTimer) autoCalculateTimer->stop();
 
-			auto file = texMan->newFile("inst");//check here if append or normal gen is needed
-			QStringList ls0 {QString::fromStdString(result_tex)};
-			file->addInMain(QString::fromStdString(parsed_tex),ls0);
-			recent_path = texMan->genFileat(file);
-			genTeX = true;
-			recent_file = file;
+			if(settings->tex_enable){
+				texFile * file;	
+				if(!update_parse){//append result
+					file = texMan->at(texMan->getFileCount()-1);
+					file->appendResult(QString::fromStdString(result_tex));
+				}else{
+					file = texMan->newFile("inst");//check here if append or normal gen is needed
+					QStringList ls0 {QString::fromStdString(result_tex)};
+					file->addInMain(QString::fromStdString(parsed_tex),ls0);
+				}
+				recent_path = texMan->genFileat(file,update_parse);
+				genTeX = true;
+				recent_file = file;
+			}
 
 			/*original function:*/
-			historyView->addResult(alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
+			historyView->addResult(settings->tex_enable ? recent_path : "",alt_results, update_parse ? prev_result_text : "", !parsed_approx, update_parse ? parsed_text : "", b_exact, alt_results.size() > 1 && !mstruct_exact.isUndefined(), flag, !supress_dialog && update_parse && settings->evalops.parse_options.parsing_mode <= PARSING_MODE_CONVENTIONAL && update_history ? &implicit_warning : NULL);
 
 		} else if(update_parse) {
 			settings->history_answer.pop_back();

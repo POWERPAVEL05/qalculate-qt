@@ -354,6 +354,7 @@ void QalculateQtSettings::readPreferenceValue(const std::string &svar, const std
 	int v = s2i(svalue);
 	if(svar == "history_expression" || svar == "history_expression*") {
 		v_expression.push_back(svalue);
+		v_tex_files.push_back("");//htw
 		v_protected.push_back(svar[svar.length() - 1] == '*');
 		v_result.push_back(std::vector<std::string>());
 		v_exact.push_back(std::vector<int>());

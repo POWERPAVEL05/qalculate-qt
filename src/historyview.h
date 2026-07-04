@@ -37,7 +37,7 @@ class HistoryView : public QTextEdit {
 		QAction *findAction;
 		QDialog *searchDialog;
 
-		void addResult(std::vector<std::string> values, std::string expression = "", bool pexact = true, std::string parse = "", int exact = 1, bool dual_approx = false, const QString &image = QString(), bool *implicit_warning = NULL, int initial_load = 0, size_t index = 0, bool temporary = false, const std::string &tmp_value = "");
+		void addResult(QString ftname,std::vector<std::string> values, std::string expression = "", bool pexact = true, std::string parse = "", int exact = 1, bool dual_approx = false, const QString &image = QString(), bool *implicit_warning = NULL, int initial_load = 0, size_t index = 0, bool temporary = false, const std::string &tmp_value = "");
 
 
 		void clearTemporary();
@@ -116,7 +116,7 @@ class HistoryView : public QTextEdit {
 		void insertValueRequested(int);
 		void historyReloaded();
 
-		void historyCleared();
+		void historyCleared(std::vector<int>);
 		void historyMovedTop(int);
 		void historyRemoved(int);
 

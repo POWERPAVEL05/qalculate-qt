@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include "htw_texFile.h"
+#include "qprocess.h"
 
 #include <QFile>
 #include <QDir>
@@ -39,17 +40,18 @@ class texManager : public QObject{
         ~texManager();
 
         QString genFileat(size_t i);
-        QString genFileat(texFile * file);
+        QString genFileat(texFile *, bool);
         size_t getFileCount();
         bool canGenerateTex();
         texFile * at(size_t i);
         texFile * newFile(const QString &fname);
+        texFile * getNewestFile();
 
     public slots:
-		void onhistoryCleared();
+		void onhistoryCleared(vector<int>);
 		void onhistoryMovedTop(int);
 		void onhistoryRemoved(int);
-        void onProcDone(int id, QString path);
+        void onProcDone(int,QProcess::ExitStatus);
 
     signals:
         void texManDoneGenerating(int id, QString path);

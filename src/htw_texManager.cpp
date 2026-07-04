@@ -1,7 +1,6 @@
 #include <QFile>
 #include <QDebug>
 #include <cstddef>
-#include <sstream>
 
 #include "qalculateqtsettings.h"
 #include "htw_texManager.h"
@@ -17,8 +16,9 @@ using std::string;
 
 texFile::texFile(const QString &fname,QDir * dir,const QString &type ,const QString &preamble)
 {
-    static int total = 0;
-    m_fname = QString("%1_%2").arg(fname).arg(total++);
+    // static int total = 0;
+    // m_fname = QString("%1_%2").arg(fname).arg(total++);
+    m_fname = fname;
     m_path = dir->absolutePath();
     m_preamble += "\\documentclass{" + type  + "}";
     m_preamble += preamble;
@@ -30,7 +30,8 @@ texFile::texFile(const QString &fname,QDir * dir,const QString &type ,const QStr
     if(m_file->open(QIODevice::ReadWrite | QIODevice::Text))
     {
         //TODO: add rubbish files
-        settings->tempfiles.push_back(m_file->fileName());/*kill file later*/ 
+        // settings->tempfiles.push_back(m_file->fileName());/*kill file later*/ 
+        // settings->tempfiles.push_back(getFilePath(true)+"jpeg");/*kill file later*/ 
         m_fileOpen = true;
         QDebug(QtDebugMsg) << "Opened" << m_file->fileName()<< "\n";
     } 
@@ -39,12 +40,13 @@ texFile::texFile(const QString &fname,QDir * dir,const QString &type ,const QStr
 bool texFile::generate()
 {
     if(m_isGenerated || !m_fileOpen) return false;/*file not processed correctly*/
-
+    m_file->resize(0);//avoid bad write one regeneratoin
     QTextStream out(m_file);
-    out << m_preamble << "\\begin{document}" <<  m_expr <<  "\\quad";
+    out << m_preamble << "\\begin{document}" <<  m_expr <<  " \\quad ";
     for(auto s : m_results) out << s;
     out << "\\end{document}\n";
 
+    QDebug(QtDebugMsg) << m_expr << m_results;
     return true;
 }
 
@@ -109,6 +111,14 @@ texManager::texManager()
     m_ftemp->setPermissions(perms);
 
     m_proc =  new QProcess;
+    connect(m_proc,SIGNAL(finished(int,QProcess::exitStatus)),this,SLOT(onProcDone(int,QProcess::exitStatus)));
+
+    for(auto i : settings->v_expression) m_files.push_back(nullptr);
+}
+
+void texManager::onProcDone(int exitCode,QProcess::ExitStatus status){
+    if(exitCode > 0 || status == QProcess::ExitStatus::CrashExit) return;
+    emit texManDoneGenerating(0,"");
 }
 
 texManager::~texManager()
@@ -119,7 +129,7 @@ texManager::~texManager()
     }
 }
 
-QString texManager::genFileat(texFile * file)
+QString texManager::genFileat(texFile * file,bool isNew)
 {
     if(!canGenerateTex() || !file) return "";
     if(!file->generate()) return "";
@@ -129,7 +139,7 @@ QString texManager::genFileat(texFile * file)
     QDebug(QtDebugMsg) << args;
 
     m_ftemp->open();
-    m_proc->start("bash",args);
+    m_proc->start("bash",args);//script runs weird else
 
     // m_proc->waitForFinished();
     // QDebug(QtDebugMsg) << m_proc->exitCode() << file->getFilePath() << "\n";
@@ -145,18 +155,20 @@ QString texManager::genFileat(texFile * file)
     // qDebug() << "stdout:" << m_proc->readAllStandardOutput();
     // qDebug() << "stderr:" << m_proc->readAllStandardError();
 
-    // m_ftemp->open();
-    // QTextStream in(m_ftemp);
-    // QDebug(QtDebugMsg) << m_ftemp->size() << in.readAll();
+    //sync to settings
 
-    QDebug(QtDebugMsg) << m_ftemp->fileName();
+    QString jpeg_path = file->getFilePath(true)+".jpeg";
+    if(isNew) settings->v_tex_files.back() = jpeg_path;//dont add already existing file
 
-    return file->getFilePath(true)+".jpeg";
+    for(auto i : settings->v_tex_files) QDebug(QtDebugMsg) << i;
+    for(auto i : m_files) if(i) QDebug(QtDebugMsg) << i->getFilePath();
+    return jpeg_path;
 }
 
 texFile * texManager::newFile(const QString &fname)
 {
-    texFile *ret = new texFile(fname,m_currentDir);
+    static int total = 0;
+    texFile *ret = new texFile(QString("%1_%2").arg(fname).arg(total++),m_currentDir);
     m_files.push_back(ret);
     settings->v_tex_files.push_back("");//signal no file for this slot
     return ret;
@@ -164,7 +176,7 @@ texFile * texManager::newFile(const QString &fname)
 QString texManager::genFileat(size_t i)
 {
     texFile * file = at(i);
-    return genFileat(file);
+    return genFileat(file,true);
 }
 
 size_t texManager::getFileCount()
@@ -189,12 +201,25 @@ texFile * texManager::at(size_t i)
     return ret;
 }
 
-void texManager::onhistoryCleared(){
+void texManager::onhistoryCleared(vector<int> v){
+    return;
+    QDebug(QtDebugMsg) << "texMan files" << m_files.size();
+    std::reverse(v.begin(),v.end());
+    for(auto i : v){
+        QDebug(QtDebugMsg) << i;
+        if(i < (int)m_files.size()) m_files.erase(m_files.begin()+i);
+    }
+}
+//later
+void texManager::onhistoryMovedTop(int i1){
+    QDebug(QtDebugMsg) << "texMan files" << m_files.size();
     return;
 }
-void texManager::onhistoryMovedTop(int){
-    return;
-}
-void texManager::onhistoryRemoved(int){
+void texManager::onhistoryRemoved(int i1){
+
+    if(i1 < (int)m_files.size()){
+        m_files.erase(m_files.begin()+i1);
+    }
+
     return;
 }

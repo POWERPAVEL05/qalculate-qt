@@ -39,3 +39,5 @@ todo:
 
     - add button for tex enable
     - might add lock on generation
+    - add qobjconstructor to texManager
+    - figure out why bases are weird

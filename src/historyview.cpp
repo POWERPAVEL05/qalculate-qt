@@ -36,6 +36,7 @@
 
 #include <libqalculate/MathStructure.h>
 #include <libqalculate/qalculate.h>
+#include <vector>
 
 #include "expressionedit.h"
 #include "historyview.h"
@@ -65,11 +66,16 @@ MathStructure * HistoryView::mathStructAtContext(){
 
 void HistoryView::onTexManGenDone(int,QString)
 {
-
+	return;
 }
 
 //debug
 void HistoryView::debug(const QPoint &pos){
+
+	QDebug(QtDebugMsg) << "v_expr len " << settings->v_expression.size() << " v_tex_file " << settings->v_tex_files.size();
+	emit historyMovedTop(0);
+	// emit historyRemoved(0); // mega dummer hook
+	return;
 	QString sref = anchorAt(pos);
 
 	if(!sref.isEmpty())
@@ -410,6 +416,8 @@ void HistoryView::loadInitial(bool reload) {
 			settings->v_value.erase(settings->v_value.begin() + i);
 			settings->v_messages.erase(settings->v_messages.begin() + i);
 			settings->v_parseerror.erase(settings->v_parseerror.begin() + i);
+			settings->v_tex_files.erase(settings->v_tex_files.begin() + i);
+			emit historyRemoved(i);
 		} else {
 			i++;
 		}
@@ -430,7 +438,7 @@ void HistoryView::loadInitial(bool reload) {
 					settings->v_messages[i].replace("width=\"2\"", "width=\"1\"");
 				}
 			}
-			addResult(settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload ? 2 : 1, i);
+			addResult( ( settings->tex_enable && reload && i < settings->v_tex_files.size() ) ? settings->v_tex_files[i] :"",settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload ? 2 : 1, i);
 		}
 		if((settings->color == 2 && (s_text.contains("color:#00") || s_text.contains("color:#58"))) || (settings->color != 2 && (s_text.contains("color:#FF") || s_text.contains("color:#AA")))) {
 			replaceColors(s_text);
@@ -450,7 +458,7 @@ void HistoryView::loadInitial(bool reload) {
 				settings->v_messages[i].replace("width=\"2\"", "width=\"1\"");
 			}
 		}
-		addResult(settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload && !settings->history_answer.empty() && settings->current_result ? 3 : (reload ? 2 : 1), i);
+		addResult("",settings->v_result[i], settings->v_expression[i], settings->v_pexact[i], settings->v_parse[i], true, false, QString(), NULL, reload && !settings->history_answer.empty() && settings->current_result ? 3 : (reload ? 2 : 1), i);
 	}
 	initial_loaded = true;
 	QFontMetrics fm(font());
@@ -526,7 +534,7 @@ int HistoryView::maxTemporaryCharacters() {
 }
 
 
-void HistoryView::addResult(std::vector<std::string> values, std::string expression, bool pexact, std::string parse, int exact, bool dual_approx, const QString &image, bool *implicit_warning, int initial_load, size_t index, bool temporary, const std::string &tmp_value) {
+void HistoryView::addResult(QString ftname,std::vector<std::string> values, std::string expression, bool pexact, std::string parse, int exact, bool dual_approx, const QString &image, bool *implicit_warning, int initial_load, size_t index, bool temporary, const std::string &tmp_value) {
 	if(temporary && !previous_temporary) {
 		previous_cursor2 = previous_cursor;
 	}
@@ -806,15 +814,17 @@ void HistoryView::addResult(std::vector<std::string> values, std::string express
 			str += "/>";
 
 		}
-		if(!temporary && !initial_load){
-			str += "<td>hallo</td>";
+
+		if(!temporary && !initial_load && settings->tex_enable && !ftname.isEmpty()){
+			str += QString("</td><td><img src=\"%1\"></td>").arg(ftname);
 		}
+
 		if(!temporary || !values[i].empty()) str += "</a>";
 
 		// str+= "</td>";
 		// str+="</tr>";
 
-		str += "</td></tr>";
+		str += "</tr>";
 		i_answer_pre = i_answer;
 		n++;
 	}
@@ -961,7 +971,7 @@ void HistoryView::changeEvent(QEvent *e) {
 }
 void HistoryView::addMessages() {
 	std::vector<std::string> values;
-	addResult(values, "", true, "", true);
+	addResult("",values, "", true, "", true);
 }
 void HistoryView::mouseMoveEvent(QMouseEvent *e) {
 	QString str = anchorAt(e->pos());
@@ -1114,6 +1124,7 @@ void HistoryView::resizeEvent(QResizeEvent *e) {
 }
 
 void HistoryView::editClear() {
+	std::vector<int> sig;
 	for(size_t i1 = 0; i1 < settings->v_protected.size();) {
 		if(!settings->v_protected[i1]) {
 			if(i1 == settings->v_protected.size() - 1) settings->current_result = NULL;
@@ -1127,6 +1138,8 @@ void HistoryView::editClear() {
 			settings->v_value.erase(settings->v_value.begin() + i1);
 			settings->v_messages.erase(settings->v_messages.begin() + i1);
 			settings->v_parseerror.erase(settings->v_parseerror.begin() + i1);
+			settings->v_tex_files.erase(settings->v_tex_files.begin()+i1);//htw
+			emit historyRemoved(i1);
 		} else {
 			i1++;
 		}
@@ -1153,6 +1166,8 @@ void HistoryView::editMoveToTop() {
 	settings->v_value.push_back(settings->v_value[i1]);
 	settings->v_messages.push_back(settings->v_messages[i1]);
 	settings->v_parseerror.push_back(settings->v_parseerror[i1]);
+	settings->v_tex_files.push_back(settings->v_tex_files[i1]);
+
 	settings->v_expression.erase(settings->v_expression.begin() + i1);
 	settings->v_parse.erase(settings->v_parse.begin() + i1);
 	settings->v_result.erase(settings->v_result.begin() + i1);
@@ -1163,8 +1178,10 @@ void HistoryView::editMoveToTop() {
 	settings->v_value.erase(settings->v_value.begin() + i1);
 	settings->v_messages.erase(settings->v_messages.begin() + i1);
 	settings->v_parseerror.erase(settings->v_parseerror.begin() + i1);
+	settings->v_tex_files.erase(settings->v_tex_files.begin()+i1);//htw
 	SCROLL_TO_BEGINNING
 	reloadHistory();
+	emit historyMovedTop(i1);
 }
 void HistoryView::reloadHistory() {
 	SAVE_SCROLLBAR_POS
@@ -1190,6 +1207,7 @@ void HistoryView::editRemove() {
 			settings->v_result[i1].erase(settings->v_result[i1].begin() + i2);
 			settings->v_exact[i1].erase(settings->v_exact[i1].begin() + i2);
 			settings->v_value[i1].erase(settings->v_value[i1].begin() + i2);
+			//should also reeval here
 		}
 	}
 	if(i2 < 0) {
@@ -1204,9 +1222,12 @@ void HistoryView::editRemove() {
 		settings->v_value.erase(settings->v_value.begin() + i1);
 		settings->v_messages.erase(settings->v_messages.begin() + i1);
 		settings->v_parseerror.erase(settings->v_parseerror.begin() + i1);
+		settings->v_tex_files.erase(settings->v_tex_files.begin() + i1);//htw
 	}
+	QDebug(QtDebugMsg) << "editRem";
 	SAVE_SCROLLBAR_POS
 	reloadHistory();
+	// emit historyRemoved(i2);
 	RESTORE_SCROLLBAR_POS
 }
 void HistoryView::editComment(int i1, int i2) {
@@ -1251,7 +1272,7 @@ void HistoryView::editComment(int i1, int i2) {
 			} else if(!settings->history_answer.empty() && i1 == (int) settings->v_result.size() - 1 && i2 == 0) {
 				std::vector<std::string> values;
 				values.push_back(str.toStdString());
-				addResult(values, "", true, "", settings->v_exact[i1][i2]);
+				addResult("",values, "", true, "", settings->v_exact[i1][i2]);
 				emit historyReloaded();
 			} else {
 				settings->v_result[i1].insert(settings->v_result[i1].begin(), str.toStdString());
